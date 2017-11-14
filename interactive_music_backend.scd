@@ -1,11 +1,8 @@
 (
-var midiOut, chords, markov, normalize, markovStep;
+var midiOut, chords, markov, normalize, markovStep, tempoClock, state, playChord, chordStep, markovNorm;
 
-60	64	67	72
-57	62	65	69
-55	59	62	65
-53	57	60	65
-54	57	60	62
+
+midiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
 
 chords = List.new;
 
@@ -16,6 +13,8 @@ chords.add([53, 57, 60, 65]);
 chords.add([54, 57, 60, 62]);
 
 c = chords;
+
+state = 0;
 
 markov = [
     [9, 8, 7, 6, 5],
@@ -45,8 +44,43 @@ markovStep = {|transitions, state|
     })};
     newState
 };
-)
 
+markovNorm = normalize.(markov);
+
+playChord = {|chord|
+    var waitTime = [0.5, 0.75, 0.25].choose;
+    ["CHORD PLAY", chord].postln;
+    chord.do({|note|
+        Task({
+            midiOut.noteOn(1, note);
+            (waitTime-0.05).wait;
+            midiOut.noteOff(1, note);
+        }, tempoClock).play;
+    });
+    waitTime
+};
+
+chordStep = {
+    var waitTime;
+    state = markovStep.(markovNorm, state);
+    waitTime = playChord.(chords[state]);
+    ["CHORD PLAYED", state].postln;
+    waitTime;
+};
+
+    //TODO: move variable instations to near the functions that use them
+OSCFunc({|msg, time, addr, recvPort|
+    //msg[1] is the new BEAT DURATION (not tempo)
+    tempoClock = TempoClock.new(1/msg[1], 0);
+    //t = tempoClock;
+    tempoClock.sched(0,chordStep);
+    "MULTILOOP ONE SHOT".postln;
+
+}, "/masterClockBeat").oneShot;
+
+
+
+)
 
 
 
