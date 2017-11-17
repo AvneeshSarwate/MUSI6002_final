@@ -11,15 +11,18 @@ var sawwav = {|fr,ph,am,sh, time| (saw.((fr*time)+ph)*am)+sh};
 var tri = {|time| var tm = time%2; case {tm<0.5} {2*tm} {tm<1.5} {2-(2*tm)} {tm>=1.5} {2*tm-4}};
 var triwav = {|fr,ph,am,sh, time| (tri.((fr*time)+ph)*am)+sh};
 
+
 n = NetAddr("localhost", 7500);
 
-t = TempoClock.new(2);
+t = TempoClock.new(0.125);
 
-t.sched(0, {
-    n.sendMsg("/msg2", t.beats.sin, t.beats.cos, 0, 0);
-    [t.beats.sin, t.beats.cos].postln;
-    0.1
-});
+Task({
+    {
+        n.sendMsg("/msg2", t.beats.sin, t.beats.cos, 0, 0);
+        // [t.beats.sin, t.beats.cos].postln;
+        0.01.wait;
+    }.loop
+}, t).play;
 
 )
 
