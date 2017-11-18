@@ -7,8 +7,9 @@ void main () {
     vec2 segGrid = vec2(floor(stN.x*30.0 * sin(time/7.)), floor(stN.y*30.0 * sin(time/7.)));
 
     vec2 xy;
-    if(mod(segGrid.x, 2.) == mod(segGrid.y, 2.)) xy = rotate(vec2(msg2.x, msg2.y), stN.xy, time + rand(stN)*sin(time/7.));
-    else xy = rotate(vec2(msg2.x, msg2.y), stN.xy, - time - rand(stN)*sin(time/7.));
+    float noiseVal = rand(stN)*sin(time/7.) * 0.15;
+    if(mod(segGrid.x, 2.) == mod(segGrid.y, 2.)) xy = rotate(vec2(msg2.x, msg2.y), stN.xy, time + noiseVal);
+    else xy = rotate(vec2(msg2.x, msg2.y), stN.xy, - time - noiseVal);
     
     float section = floor(xy.x*30.0 * sin(time/7.));
     float tile = mod(section, 2.);

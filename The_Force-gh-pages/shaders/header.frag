@@ -40,8 +40,8 @@ float circle(float x,float y,float r,float f) {
 }
 
 vec2 rotate(vec2 space, vec2 center, float amount){
-    return vec2(cos(amount) * (space.x - center.x) + sin(amount) * (space.y - center.y),
-        cos(amount) * (space.y - center.y) - sin(amount) * (space.x - center.x));
+    return vec2(cos(amount) * (space.x - center.x) + sin(amount) * (space.y - center.y) + center.x,
+        cos(amount) * (space.y - center.y) - sin(amount) * (space.x - center.x) + center.y);
 }
 
 vec2 mod289(vec2 x) { return x - floor(x * (1.0/289.0)) * 289.0; }
