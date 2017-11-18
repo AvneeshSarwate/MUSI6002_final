@@ -24,6 +24,7 @@ var testingImage = false;
 var testTexture;
 
 var videoTexture;
+var video;
 
 function createGlContext() {
     var gGLContext = null;

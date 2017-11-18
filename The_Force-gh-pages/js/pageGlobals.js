@@ -607,6 +607,8 @@ $( document ).ready(function()
                 case "tex_webcam":
                     texture.globject = videoTexture;
                     texture.type = "tex_2D";
+                    texture.image = {height: video.height, width: video.width};
+                    texture.loaded = copyVideo;
                     break;
 
                 case "tex_audio":
@@ -1021,14 +1023,14 @@ $( document ).ready(function()
         }
 
         if (copyVideo) {
-          updateTexture(gl, texture, video);
+          updateVideoTexture(gl, videoTexture, video);
         }
 
         paint();
     }
 
-    setupVideo("./starfield.mov");
-    videoTexture = initiVideoTexture(gl, "blankurl");
+    video = setupVideo("./starfield.mov");
+    videoTexture = initVideoTexture(gl, "blankurl");
 
     mTime = Date.now();
     renderLoop2();
