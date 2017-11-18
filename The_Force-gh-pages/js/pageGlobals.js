@@ -605,6 +605,8 @@ $( document ).ready(function()
                     break;
 
                 case "tex_webcam":
+                    texture.globject = videoTexture;
+                    texture.type = "tex_2D";
                     break;
 
                 case "tex_audio":
@@ -1006,20 +1008,27 @@ $( document ).ready(function()
 
         if($('#soundFile').length) {
         var secs = $('#soundFile').get(0).currentTime;
-      //       var hr  = Math.floor(secs / 3600);
-      var min = Math.floor(secs / 60.);
-      var sec = Math.floor(secs) % 60;
+          //       var hr  = Math.floor(secs / 3600);
+          var min = Math.floor(secs / 60.);
+          var sec = Math.floor(secs) % 60;
 
-        if (min < 10)
-            min = "0" + min; 
-        if (sec < 10)
-            sec  = "0" + sec;
+            if (min < 10)
+                min = "0" + min; 
+            if (sec < 10)
+                sec  = "0" + sec;
 
-        $("#audioClock").html(min + ':' + sec);
-    }
+            $("#audioClock").html(min + ':' + sec);
+        }
+
+        if (copyVideo) {
+          updateTexture(gl, texture, video);
+        }
 
         paint();
     }
+
+    setupVideo("./starfield.mov");
+    videoTexture = initiVideoTexture(gl, "blankurl");
 
     mTime = Date.now();
     renderLoop2();
