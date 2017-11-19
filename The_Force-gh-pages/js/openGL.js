@@ -345,6 +345,9 @@ var copyVideo = false;
 function setupVideo(url) {
   const video = document.createElement('video');
 
+
+  var hasUserMedia = navigator.webkitGetUserMedia ? true : false;
+
   var playing = false;
   var timeupdate = false;
 
@@ -365,8 +368,16 @@ function setupVideo(url) {
      checkReady();
   }, true);
 
-  video.src = url;
-  video.play();
+  var constraints = {video: { width: 1280, height: 720 } }; 
+
+  navigator.mediaDevices.getUserMedia(constraints)
+  .then(function(mediaStream) {
+    video.srcObject = mediaStream;
+    video.onloadedmetadata = function(e) {
+      video.play();
+    };
+  })
+  .catch(function(err) { console.log(err.name + ": " + err.message); }); // always check for errors at the end.
 
   function checkReady() {
     if (playing && timeupdate) {
