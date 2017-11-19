@@ -18,9 +18,28 @@ t = TempoClock.new(0.125);
 
 Task({
     {
-        n.sendMsg("/msg2", t.beats.sin, t.beats.cos, 0, 0);
-        // [t.beats.sin, t.beats.cos].postln;
+        (0..4).do({|i|
+            n.sendMsg("/p"++i, (t.beats+i).sin, (t.beats-i).cos, 0, 0);
+        });
+        [t.beats.sin, t.beats.cos].postln;
         0.01.wait;
+    }.loop
+}, t).play;
+
+)
+
+(
+n = NetAddr("localhost", 7500);
+
+t = TempoClock.new(1);
+
+Task({
+    var ind = 0.0;
+    {
+        ind = (ind+1.0) % 3.0;
+        n.sendMsg("/rot", ind + 0.01, 0, 0, 0);
+        ind.postln;
+        0.1.wait;
     }.loop
 }, t).play;
 
