@@ -1,6 +1,7 @@
 float sinN(float t){
-   return sin(t)/2. + 1.; 
+   return (sin(t) + 1.) / 1.; 
 }
+
 vec3 lum(vec3 color){
     vec3 weights = vec3(0.212, 0.7152, 0.0722);
     return vec3(dot(color, weights));
