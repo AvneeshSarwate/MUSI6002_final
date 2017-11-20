@@ -26,16 +26,18 @@ float wrap(float val, float low, float high){
 void main() {
     vec2 stN = uvN();
     vec3 cam = texture2D(channel0, vec2(1.-stN.x, stN.y)).xyz; 
+    vec3 lumC = lum(cam);
     float numBlocks = 50.;
     vec2 res = gl_FragCoord.xy / stN;
     vec2 blockSize = res.xy / numBlocks;
     vec2 blockStart = floor(gl_FragCoord.xy / blockSize) * blockSize / res.xy;
-    vec2 inc = vec2(1. / (numBlocks *10.));
     vec3 blockAvgLuma = vec3(0.);
     vec2 counter = blockStart;
+    
+    vec2 inc = vec2(1. / (numBlocks *100.));
     for(float i = 0.; i < 10.; i += 1.){
         for(float j = 0.; j < 10.; j += 1.){
-            blockAvgLuma += lum(texture2D(channel0, vec2(counter.x, counter.y)).xyz);
+            blockAvgLuma += lum(texture2D(channel0, vec2(1.-counter.x, counter.y)).xyz);
             counter += inc;
         }
     }
