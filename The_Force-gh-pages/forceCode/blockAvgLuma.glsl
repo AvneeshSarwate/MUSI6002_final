@@ -43,5 +43,5 @@ void main() {
     }
     blockAvgLuma /= 100.;
     
-    gl_FragColor = vec4(blockAvgLuma, 1.0);
+    gl_FragColor = vec4(quant(blockAvgLuma, 1.+sinN(time/4.)*10.), 1.0);
 }
