@@ -18,6 +18,7 @@ t = TempoClock.new(0.125);
 
 Task({
     {
+        n.sendMsg("/msg2", (t.beats).sin, (t.beats).cos, 0, 0);
         (0..4).do({|i|
             n.sendMsg("/p"++i, (t.beats+i).sin, (t.beats-i).cos, 0, 0);
         });
