@@ -35,23 +35,24 @@ function calculateCenterOfMass() {
 	var weightedSums = [0, 0, 0, 0] //left xy, right xy
 	var sums = [0, 0, 0, 0];
 	
-	for(var i = 0; i < yDim; i++) {
-		for(var j = 0; j < xDim; j++) {
+	for(var i = 0; i < xDim; i++) {
+		for(var j = 0; j < yDim; j++) {
 			var camColor = camMatrix.getcell(i, j);
 			var backgroundColor = backgroundMatrix.getcell(i, j);
 			var colDist = colourDistance(camColor, backgroundColor)/765;
+			colDist = colDist > colDistThresh ? colDist : 0;
 			diffMatrix.setcell2d(i, j, colDist);
 			if(colDist > colDistThresh) {
-				if(j < xDim/2) {
+				if(i < xDim/2) {
 					sums[0] += colDist;
-					weightedSums[0] += colDist * j;
+					weightedSums[0] += colDist * i;
 					sums[1] += colDist;
-					weightedSums[1] += colDist * i;
+					weightedSums[1] += colDist * j;
 				} else {
 					sums[2] += colDist;
-					weightedSums[2] += colDist * (xDim - j);
+					weightedSums[2] += colDist * (xDim - i);
 					sums[3] += colDist;		
-					weightedSums[3] += colDist * i;
+					weightedSums[3] += colDist * j;
 				}
 			}
 		}
