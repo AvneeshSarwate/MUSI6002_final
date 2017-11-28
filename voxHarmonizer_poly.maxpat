@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 865.0, 185.0, 720.0, 640.0 ],
+		"rect" : [ 865.0, 185.0, 723.0, 765.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -37,6 +37,409 @@
 		"style" : "",
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
+				"box" : 				{
+					"format" : 6,
+					"id" : "obj-47",
+					"maxclass" : "flonum",
+					"maximum" : 1.0,
+					"minimum" : 0.0,
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "bang" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 296.5, 332.0, 50.0, 22.0 ],
+					"style" : ""
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-45",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 251.0, 364.0, 141.0, 22.0 ],
+					"style" : "",
+					"text" : "target 0, downOctave $1"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"autosave" : 1,
+					"bgmode" : 1,
+					"border" : 0,
+					"clickthrough" : 0,
+					"enablehscroll" : 0,
+					"enablevscroll" : 0,
+					"id" : "obj-35",
+					"lockeddragscroll" : 0,
+					"maxclass" : "newobj",
+					"numinlets" : 3,
+					"numoutlets" : 4,
+					"offset" : [ 0.0, 0.0 ],
+					"outlettype" : [ "signal", "signal", "", "" ],
+					"patching_rect" : [ 316.0, 505.0, 144.0, 22.0 ],
+					"saved_attribute_attributes" : 					{
+						"valueof" : 						{
+							"parameter_invisible" : 1,
+							"parameter_longname" : "amxd~[1]",
+							"parameter_shortname" : "amxd~[1]",
+							"parameter_type" : 3
+						}
+
+					}
+,
+					"saved_object_attributes" : 					{
+						"annotation_name" : "",
+						"parameter_enable" : 1,
+						"patchername" : "Chorus x2.amxd",
+						"patchername_fallback" : "C74:/packages/Max for Live/patchers/Max Audio Effect/Chorus x2/Chorus x2.amxd"
+					}
+,
+					"snapshot" : 					{
+						"filetype" : "C74Snapshot",
+						"version" : 2,
+						"minorversion" : 0,
+						"name" : "snapshotlist",
+						"origin" : "max~",
+						"type" : "list",
+						"subtype" : "Undefined",
+						"embed" : 1,
+						"snapshot" : 						{
+							"name" : "Chorus x2.amxd",
+							"origname" : "C74:/packages/Max for Live/patchers/Max Audio Effect/Chorus x2/Chorus x2.amxd",
+							"valuedictionary" : 							{
+								"parameter_values" : 								{
+									"delay_H" : 36.0,
+									"delay_L" : 24.0,
+									"depth_H" : 5.0,
+									"depth_L" : 4.9,
+									"fdback_H" : 15.0,
+									"fdback_L" : 5.0,
+									"gain_H" : 0.0,
+									"gain_L" : 50.0,
+									"hi_polarity" : 0.0,
+									"lo_polarity" : 1.0,
+									"mod_L" : 1.0,
+									"mod_rate" : 1.0,
+									"osc_H" : 0.537039,
+									"osc_L" : 0.556987,
+									"wet/dry" : 88.18898,
+									"x-over" : 5000.0
+								}
+
+							}
+
+						}
+,
+						"snapshotlist" : 						{
+							"current_snapshot" : 0,
+							"entries" : [ 								{
+									"filetype" : "C74Snapshot",
+									"version" : 2,
+									"minorversion" : 0,
+									"name" : "Chorus x2.amxd",
+									"origin" : "Chorus x2.amxd",
+									"type" : "amxd",
+									"subtype" : "Undefined",
+									"embed" : 0,
+									"snapshot" : 									{
+										"name" : "Chorus x2.amxd",
+										"origname" : "C74:/packages/Max for Live/patchers/Max Audio Effect/Chorus x2/Chorus x2.amxd",
+										"valuedictionary" : 										{
+											"parameter_values" : 											{
+												"delay_H" : 36.0,
+												"delay_L" : 24.0,
+												"depth_H" : 5.0,
+												"depth_L" : 4.9,
+												"fdback_H" : 15.0,
+												"fdback_L" : 5.0,
+												"gain_H" : 0.0,
+												"gain_L" : 50.0,
+												"hi_polarity" : 0.0,
+												"lo_polarity" : 1.0,
+												"mod_L" : 1.0,
+												"mod_rate" : 1.0,
+												"osc_H" : 0.537039,
+												"osc_L" : 0.556987,
+												"wet/dry" : 88.18898,
+												"x-over" : 5000.0
+											}
+
+										}
+
+									}
+,
+									"fileref" : 									{
+										"name" : "Chorus x2.amxd",
+										"filename" : "Chorus x2.amxd.maxsnap",
+										"filepath" : "~/Documents/Max 7/Snapshots",
+										"filepos" : -1,
+										"snapshotfileid" : "b387234a142f3b77489c559a4d558b95"
+									}
+
+								}
+ ]
+						}
+
+					}
+,
+					"style" : "",
+					"text" : "amxd~ \"Chorus x2.amxd\"",
+					"varname" : "amxd~[1]",
+					"viewvisibility" : 0
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-34",
+					"maxclass" : "newobj",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "int" ],
+					"patching_rect" : [ 243.0, 654.0, 37.0, 22.0 ],
+					"style" : "",
+					"text" : "2137"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"format" : 6,
+					"id" : "obj-28",
+					"maxclass" : "flonum",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "bang" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 189.0, 654.0, 50.0, 22.0 ],
+					"style" : ""
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-19",
+					"maxclass" : "newobj",
+					"numinlets" : 3,
+					"numoutlets" : 1,
+					"outlettype" : [ "signal" ],
+					"patching_rect" : [ 136.0, 654.0, 44.0, 22.0 ],
+					"style" : "",
+					"text" : "lores~"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-43",
+					"maxclass" : "newobj",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "int" ],
+					"patching_rect" : [ 24.0, 463.0, 29.5, 22.0 ],
+					"style" : "",
+					"text" : "+ 1"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-42",
+					"maxclass" : "toggle",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "int" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 30.0, 434.196198, 24.0, 24.0 ],
+					"style" : ""
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-41",
+					"maxclass" : "newobj",
+					"numinlets" : 2,
+					"numoutlets" : 2,
+					"outlettype" : [ "signal", "signal" ],
+					"patching_rect" : [ 87.0, 482.0, 51.0, 22.0 ],
+					"style" : "",
+					"text" : "gate~ 2"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-39",
+					"maxclass" : "number",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "bang" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 479.0, 396.0, 50.0, 22.0 ],
+					"style" : ""
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-36",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 362.0, 425.0, 70.0, 22.0 ],
+					"style" : "",
+					"text" : "Dry/Wet $1"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"autosave" : 1,
+					"bgmode" : 1,
+					"border" : 0,
+					"clickthrough" : 0,
+					"enablehscroll" : 0,
+					"enablevscroll" : 0,
+					"id" : "obj-24",
+					"lockeddragscroll" : 0,
+					"maxclass" : "newobj",
+					"numinlets" : 3,
+					"numoutlets" : 4,
+					"offset" : [ 0.0, 0.0 ],
+					"outlettype" : [ "signal", "signal", "", "" ],
+					"patching_rect" : [ 323.0, 470.0, 172.0, 22.0 ],
+					"saved_attribute_attributes" : 					{
+						"valueof" : 						{
+							"parameter_invisible" : 1,
+							"parameter_longname" : "amxd~",
+							"parameter_shortname" : "amxd~",
+							"parameter_type" : 3
+						}
+
+					}
+,
+					"saved_object_attributes" : 					{
+						"annotation_name" : "",
+						"parameter_enable" : 1,
+						"patchername" : "Max DelayTaps.amxd",
+						"patchername_fallback" : "C74:/packages/Max for Live/patchers/Max Audio Effect/Max DelayTaps/Max DelayTaps.amxd"
+					}
+,
+					"snapshot" : 					{
+						"filetype" : "C74Snapshot",
+						"version" : 2,
+						"minorversion" : 0,
+						"name" : "snapshotlist",
+						"origin" : "max~",
+						"type" : "list",
+						"subtype" : "Undefined",
+						"embed" : 1,
+						"snapshot" : 						{
+							"name" : "Max DelayTaps.amxd",
+							"origname" : "C74:/packages/Max for Live/patchers/Max Audio Effect/Max DelayTaps/Max DelayTaps.amxd",
+							"valuedictionary" : 							{
+								"parameter_values" : 								{
+									"DelaysMax" : 3795.275635,
+									"DelaysMin" : 787.40155,
+									"Dry/Wet" : 21.259842,
+									"Feedback" : 23.385824,
+									"LevelsMax" : 100.0,
+									"LevelsMin" : 76.377953,
+									"MasterGain" : 0.0,
+									"PansMax" : 50.0,
+									"PansMin" : -50.0,
+									"blob" : 									{
+										"Taps" : [ 8 ],
+										"Delays" : [ -0.71875, -0.375, -0.0625, 0.203125, 0.390625, 0.625, 0.8125, 1.0 ],
+										"Levels" : [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
+										"Pans" : [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+									}
+
+								}
+
+							}
+
+						}
+,
+						"snapshotlist" : 						{
+							"current_snapshot" : 0,
+							"entries" : [ 								{
+									"filetype" : "C74Snapshot",
+									"version" : 2,
+									"minorversion" : 0,
+									"name" : "Max DelayTaps.amxd",
+									"origin" : "Max DelayTaps.amxd",
+									"type" : "amxd",
+									"subtype" : "Undefined",
+									"embed" : 0,
+									"snapshot" : 									{
+										"name" : "Max DelayTaps.amxd",
+										"origname" : "C74:/packages/Max for Live/patchers/Max Audio Effect/Max DelayTaps/Max DelayTaps.amxd",
+										"valuedictionary" : 										{
+											"parameter_values" : 											{
+												"DelaysMax" : 3795.275635,
+												"DelaysMin" : 787.40155,
+												"Dry/Wet" : 21.259842,
+												"Feedback" : 23.385824,
+												"LevelsMax" : 100.0,
+												"LevelsMin" : 76.377953,
+												"MasterGain" : 0.0,
+												"PansMax" : 50.0,
+												"PansMin" : -50.0,
+												"blob" : 												{
+													"Taps" : [ 8 ],
+													"Delays" : [ -0.71875, -0.375, -0.0625, 0.203125, 0.390625, 0.625, 0.8125, 1.0 ],
+													"Levels" : [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
+													"Pans" : [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+												}
+
+											}
+
+										}
+
+									}
+,
+									"fileref" : 									{
+										"name" : "Max DelayTaps.amxd",
+										"filename" : "Max DelayTaps.amxd.maxsnap",
+										"filepath" : "~/Documents/Max 7/Snapshots",
+										"filepos" : -1,
+										"snapshotfileid" : "ec856715fb8b2f0d57428646ccf21e3f"
+									}
+
+								}
+ ]
+						}
+
+					}
+,
+					"style" : "",
+					"text" : "amxd~ \"Max DelayTaps.amxd\"",
+					"varname" : "amxd~",
+					"viewvisibility" : 0
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-20",
+					"maxclass" : "gain~",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "signal", "int" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 13.0, 44.0, 22.0, 140.0 ],
+					"style" : ""
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-18",
 					"maxclass" : "message",
@@ -108,7 +511,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 284.0, 332.0, 113.0, 22.0 ],
+					"patching_rect" : [ 279.0, 277.0, 113.0, 22.0 ],
 					"style" : "",
 					"text" : "target 0, relative $1"
 				}
@@ -334,7 +737,7 @@
 					"maxclass" : "ezdac~",
 					"numinlets" : 2,
 					"numoutlets" : 0,
-					"patching_rect" : [ 80.5, 530.0, 45.0, 45.0 ],
+					"patching_rect" : [ 19.5, 691.0, 45.0, 45.0 ],
 					"style" : ""
 				}
 
@@ -400,7 +803,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "signal", "signal" ],
-					"patching_rect" : [ 47.0, 44.0, 45.0, 45.0 ],
+					"patching_rect" : [ 50.0, 5.0, 45.0, 45.0 ],
 					"style" : ""
 				}
 
@@ -485,7 +888,7 @@
 				"patchline" : 				{
 					"destination" : [ "obj-11", 1 ],
 					"order" : 0,
-					"source" : [ "obj-2", 0 ]
+					"source" : [ "obj-19", 0 ]
 				}
 
 			}
@@ -493,7 +896,30 @@
 				"patchline" : 				{
 					"destination" : [ "obj-11", 0 ],
 					"order" : 1,
+					"source" : [ "obj-19", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-41", 1 ],
 					"source" : [ "obj-2", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"order" : 1,
+					"source" : [ "obj-20", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-2", 1 ],
+					"order" : 0,
+					"source" : [ "obj-20", 0 ]
 				}
 
 			}
@@ -513,8 +939,8 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-17", 0 ],
-					"source" : [ "obj-26", 0 ]
+					"destination" : [ "obj-35", 0 ],
+					"source" : [ "obj-24", 0 ]
 				}
 
 			}
@@ -531,6 +957,13 @@
 					"destination" : [ "obj-32", 0 ],
 					"order" : 0,
 					"source" : [ "obj-27", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-19", 1 ],
+					"source" : [ "obj-28", 0 ]
 				}
 
 			}
@@ -589,17 +1022,80 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"order" : 1,
+					"destination" : [ "obj-19", 0 ],
+					"source" : [ "obj-35", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-24", 0 ],
+					"source" : [ "obj-36", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-36", 0 ],
+					"source" : [ "obj-39", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-20", 0 ],
 					"source" : [ "obj-4", 0 ]
 				}
 
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-2", 1 ],
+					"destination" : [ "obj-11", 1 ],
 					"order" : 0,
-					"source" : [ "obj-4", 0 ]
+					"source" : [ "obj-41", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-11", 0 ],
+					"order" : 1,
+					"source" : [ "obj-41", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-24", 0 ],
+					"source" : [ "obj-41", 1 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-43", 0 ],
+					"source" : [ "obj-42", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-41", 0 ],
+					"source" : [ "obj-43", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-2", 0 ],
+					"source" : [ "obj-45", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-45", 0 ],
+					"source" : [ "obj-47", 0 ]
 				}
 
 			}
@@ -688,10 +1184,69 @@
 
 			}
  ],
+		"parameters" : 		{
+			"obj-24" : [ "amxd~", "amxd~", 0 ],
+			"obj-35" : [ "amxd~[1]", "amxd~[1]", 0 ]
+		}
+,
 		"dependency_cache" : [ 			{
 				"name" : "voxHarmonizer_sub.maxpat",
-				"bootpath" : "~/performancePlatform/voxHarmonizerKeyboard",
-				"patcherrelativepath" : "../../../../performancePlatform/voxHarmonizerKeyboard",
+				"bootpath" : "~/Dropbox/MusicTechHW/InteractiveMusic/final",
+				"patcherrelativepath" : ".",
+				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "Max DelayTaps.amxd.maxsnap",
+				"bootpath" : "~/Documents/Max 7/Snapshots",
+				"patcherrelativepath" : "../../../../Documents/Max 7/Snapshots",
+				"type" : "mx@s",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "Max DelayTaps.amxd",
+				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "M4L.tapdelay.voice~.maxpat",
+				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "M4L.vdelay~.maxpat",
+				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "M4L.gain1~.maxpat",
+				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "M4L.pan1~.maxpat",
+				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "M4L.bal2~.maxpat",
+				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "Chorus x2.amxd.maxsnap",
+				"bootpath" : "~/Documents/Max 7/Snapshots",
+				"patcherrelativepath" : "../../../../Documents/Max 7/Snapshots",
+				"type" : "mx@s",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "Chorus x2.amxd",
+				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "chorus.dcModulator~.maxpat",
 				"type" : "JSON",
 				"implicit" : 1
 			}
@@ -772,8 +1327,8 @@
 , 			{
 				"name" : "newobjYellow-1",
 				"default" : 				{
-					"fontsize" : [ 12.059008 ],
-					"accentcolor" : [ 0.82517, 0.78181, 0.059545, 1.0 ]
+					"accentcolor" : [ 0.82517, 0.78181, 0.059545, 1.0 ],
+					"fontsize" : [ 12.059008 ]
 				}
 ,
 				"parentstyle" : "",
