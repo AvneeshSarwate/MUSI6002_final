@@ -38,12 +38,38 @@
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-54",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 10.0, 401.0, 72.0, 22.0 ],
+					"style" : "",
+					"text" : "loadmess 1"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-37",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "bang" ],
+					"patching_rect" : [ 265.0, 615.0, 60.0, 22.0 ],
+					"style" : "",
+					"text" : "loadbang"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"clipheight" : 91.0,
 					"data" : 					{
 						"clips" : [ 							{
 								"filename" : "/Users/avneeshsarwate/Dropbox/MusicTechHW/InteractiveMusic/final/vocalDemo.wav",
 								"filekind" : "audiofile",
-								"loop" : 0,
+								"loop" : 1,
 								"content_state" : 								{
 									"followglobaltempo" : [ 0 ],
 									"slurtime" : [ 0.0 ],
@@ -526,7 +552,7 @@
 								"parameter_values" : 								{
 									"DelaysMax" : 3795.275635,
 									"DelaysMin" : 787.40155,
-									"Dry/Wet" : 46.0,
+									"Dry/Wet" : 52.0,
 									"Feedback" : 23.385824,
 									"LevelsMax" : 100.0,
 									"LevelsMin" : 76.377953,
@@ -564,7 +590,7 @@
 											"parameter_values" : 											{
 												"DelaysMax" : 3795.275635,
 												"DelaysMin" : 787.40155,
-												"Dry/Wet" : 46.0,
+												"Dry/Wet" : 52.0,
 												"Feedback" : 23.385824,
 												"LevelsMax" : 100.0,
 												"LevelsMin" : 76.377953,
@@ -1215,6 +1241,13 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-28", 0 ],
+					"source" : [ "obj-34", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-19", 0 ],
 					"source" : [ "obj-35", 0 ]
 				}
@@ -1224,6 +1257,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-24", 0 ],
 					"source" : [ "obj-36", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-34", 0 ],
+					"source" : [ "obj-37", 0 ]
 				}
 
 			}
@@ -1385,6 +1425,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-20", 0 ],
 					"source" : [ "obj-53", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-42", 0 ],
+					"source" : [ "obj-54", 0 ]
 				}
 
 			}

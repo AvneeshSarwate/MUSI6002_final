@@ -17,7 +17,7 @@ function mod(number, modulus){ return ((number%modulus)+modulus)%modulus}
 var fl = Math.floor;
  
 //variable that works as a "lock" to prevent overloading. not sure if necessary
-var calculationOccuring = false;
+var calculationOccuring = false; 
 
 function bang(){
 	if(captureBackground){
