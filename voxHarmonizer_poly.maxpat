@@ -38,6 +38,46 @@
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
+					"clipheight" : 91.0,
+					"data" : 					{
+						"clips" : [ 							{
+								"filename" : "/Users/avneeshsarwate/Dropbox/MusicTechHW/InteractiveMusic/final/vocalDemo.wav",
+								"filekind" : "audiofile",
+								"loop" : 0,
+								"content_state" : 								{
+									"followglobaltempo" : [ 0 ],
+									"slurtime" : [ 0.0 ],
+									"originallengthms" : [ 0.0 ],
+									"formant" : [ 1.0 ],
+									"mode" : [ "basic" ],
+									"formantcorrection" : [ 0 ],
+									"originaltempo" : [ 120.0 ],
+									"quality" : [ "basic" ],
+									"timestretch" : [ 0 ],
+									"basictuning" : [ 440 ],
+									"pitchshift" : [ 1.0 ],
+									"pitchcorrection" : [ 0 ],
+									"play" : [ 0 ],
+									"speed" : [ 1.0 ],
+									"originallength" : [ 0.0, "ticks" ]
+								}
+
+							}
+ ]
+					}
+,
+					"id" : "obj-53",
+					"maxclass" : "playlist~",
+					"numinlets" : 1,
+					"numoutlets" : 5,
+					"outlettype" : [ "signal", "signal", "signal", "", "dictionary" ],
+					"patching_rect" : [ 356.0, 53.0, 150.0, 92.0 ],
+					"style" : ""
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-52",
 					"maxclass" : "newobj",
 					"numinlets" : 2,
@@ -486,7 +526,7 @@
 								"parameter_values" : 								{
 									"DelaysMax" : 3795.275635,
 									"DelaysMin" : 787.40155,
-									"Dry/Wet" : 64.0,
+									"Dry/Wet" : 46.0,
 									"Feedback" : 23.385824,
 									"LevelsMax" : 100.0,
 									"LevelsMin" : 76.377953,
@@ -524,7 +564,7 @@
 											"parameter_values" : 											{
 												"DelaysMax" : 3795.275635,
 												"DelaysMin" : 787.40155,
-												"Dry/Wet" : 64.0,
+												"Dry/Wet" : 46.0,
 												"Feedback" : 23.385824,
 												"LevelsMax" : 100.0,
 												"LevelsMin" : 76.377953,
@@ -1203,13 +1243,6 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-20", 0 ],
-					"source" : [ "obj-4", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
 					"destination" : [ "obj-44", 0 ],
 					"source" : [ "obj-40", 0 ]
 				}
@@ -1350,6 +1383,13 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-20", 0 ],
+					"source" : [ "obj-53", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-7", 0 ]
 				}
@@ -1457,6 +1497,13 @@
 , 			{
 				"name" : "chorus.dcModulator~.maxpat",
 				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "vocalDemo.wav",
+				"bootpath" : "~/Dropbox/MusicTechHW/InteractiveMusic/final",
+				"patcherrelativepath" : ".",
+				"type" : "WAVE",
 				"implicit" : 1
 			}
 , 			{
