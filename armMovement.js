@@ -15,7 +15,7 @@ function mod(number, modulus){ return ((number%modulus)+modulus)%modulus}
 
 //for convenience
 var fl = Math.floor;
-
+ 
 //variable that works as a "lock" to prevent overloading. not sure if necessary
 var calculationOccuring = false;
 
@@ -25,8 +25,7 @@ function bang(){
 		captureBackground = false;
 	}
 	if(backgroundMatrix) {
-		post(calculateCenterOfMass());
-		post();
+		outlet(1, calculateCenterOfMass());
 	}
 	outlet(0, "jit_matrix", diffMatrix.name);
 }
