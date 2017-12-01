@@ -26,6 +26,9 @@ var testTexture;
 var videoTexture;
 var video;
 
+var videoSnapshotTexture;
+var takeSnapshot = false;
+
 function createGlContext() {
     var gGLContext = null;
     var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
@@ -196,6 +199,7 @@ function newShader(vs, shaderCode) {
     ch2 = gl.getUniformLocation(mProgram, "channel2");
     ch3 = gl.getUniformLocation(mProgram, "channel3");
     ch4 = gl.getUniformLocation(mProgram, "backbuffer");
+    //TODO cam-background - add something here (why?)
 
     bs = gl.getUniformLocation(mProgram, "bands");
     bandsTimeU = gl.getUniformLocation(mProgram, "bandsTime");
@@ -309,6 +313,7 @@ function createInputStr() {
         else
             mInputsStr += "uniform sampler2D channel" + i + ";\n";
     }
+    //TODO cam-background - declare uniform for background here
 }
 
 function createOSCUniforms() {
@@ -576,6 +581,7 @@ function paint() {
     if (ch2 !== null) gl.uniform1i(ch2, 2);
     if (ch3 !== null) gl.uniform1i(ch3, 3);
     if (ch4 !== null) gl.uniform1i(ch4, 4); //backbuffer
+    //TODO cam-background - add something here (why?) (setting gl.TEXTURE[i] value?)
 
     // gl.bindBuffer( gl.ARRAY_BUFFER, mQuadVBO);
     // gl.vertexAttribPointer(vertPosU, 2,  gl.FLOAT, false, 0, 0);

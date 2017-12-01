@@ -1026,11 +1026,26 @@ $( document ).ready(function()
           updateVideoTexture(gl, videoTexture, video);
         }
 
+        if(copyVideo && takeSnapshot){
+            updateVideoTexture(gl, videoSnapshotTexture, video);
+            var texture = {};
+            texture.globject = videoSnapshotTexture;
+            texture.type = "tex_2D";
+            texture.image = {height: video.height, width: video.width};
+            texture.loaded = copyVideo;
+            mInputs[3] = texture; //channel3 is hardcoded as webcam snapshot
+            takeSnapshot = false;
+            createInputStr();
+        }
+
         paint();
     }
 
     video = setupVideo("./starfield.mov");
     videoTexture = initVideoTexture(gl, "blankurl");
+
+
+    videoSnapshotTexture = initVideoTexture(gl, "blankurl");
 
     mTime = Date.now();
     renderLoop2();
