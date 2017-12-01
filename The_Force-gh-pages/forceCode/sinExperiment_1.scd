@@ -31,7 +31,7 @@ Task({
     {
         n.sendMsg("/takeSnapshot", (t.beats).sin, (t.beats).cos, 0, 0);
         [t.beats, "snapshot"].postln;
-        0.1.wait;
+        0.01.wait;
     }.loop
 }, t).play;
 
