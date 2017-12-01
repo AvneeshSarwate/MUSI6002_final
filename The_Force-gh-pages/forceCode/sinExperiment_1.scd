@@ -16,7 +16,7 @@ n = NetAddr("localhost", 7500);
 
 t = TempoClock.new(0.125);
 
-Task({
+/*Task({
     {
         n.sendMsg("/msg2", (t.beats).sin, (t.beats).cos, 0, 0);
         (0..4).do({|i|
@@ -24,6 +24,14 @@ Task({
         });
         [t.beats.sin, t.beats.cos].postln;
         0.01.wait;
+    }.loop
+}, t).play;*/
+
+Task({
+    {
+        n.sendMsg("/takeSnapshot", (t.beats).sin, (t.beats).cos, 0, 0);
+        [t.beats, "snapshot"].postln;
+        0.1.wait;
     }.loop
 }, t).play;
 

@@ -27,7 +27,7 @@ var videoTexture;
 var video;
 
 var videoSnapshotTexture;
-var takeSnapshot = false;
+var takeSnapshot = true;
 
 function createGlContext() {
     var gGLContext = null;
