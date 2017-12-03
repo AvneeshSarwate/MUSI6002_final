@@ -27,7 +27,7 @@ void main() {
     vec2 stN = uvN();
     vec3 cam = texture2D(channel0, vec2(1.-stN.x, stN.y)).xyz; 
     vec3 lumC = lum(cam);
-    float numBlocks = 50.;
+    float numBlocks = 10. + sinN(time/2.) * 40.;
     vec2 res = gl_FragCoord.xy / stN;
     vec2 blockSize = res.xy / numBlocks;
     vec2 blockStart = floor(gl_FragCoord.xy / blockSize) * blockSize / res.xy;
@@ -43,5 +43,5 @@ void main() {
     }
     blockAvgLuma /= 100.;
     
-    gl_FragColor = vec4(quant(blockAvgLuma, 1.+sinN(time/4.)*10.), 1.0);
+    gl_FragColor = vec4(quant(blockAvgLuma, 1.+sinN(time/1.5)*10.), 1.0);
 }
