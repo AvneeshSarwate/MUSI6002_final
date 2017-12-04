@@ -15,23 +15,24 @@ var triwav = {|fr,ph,am,sh, time| (tri.((fr*time)+ph)*am)+sh};
 n = NetAddr("localhost", 7500);
 
 t = TempoClock.new(0.125);
-
-/*Task({
+~w1 = 0.01;
+~w2 = 0.01;
+Task({
     {
         n.sendMsg("/msg2", (t.beats).sin, (t.beats).cos, 0, 0);
         (0..4).do({|i|
             n.sendMsg("/p"++i, (t.beats+i).sin, (t.beats-i).cos, 0, 0);
         });
         [t.beats.sin, t.beats.cos].postln;
-        0.01.wait;
+        ~w1.wait;
     }.loop
-}, t).play;*/
+}, t).play;
 
 Task({
     {
         n.sendMsg("/takeSnapshot", (t.beats).sin, (t.beats).cos, 0, 0);
         [t.beats, "snapshot"].postln;
-        0.01.wait;
+        ~w2.wait;
     }.loop
 }, t).play;
 
