@@ -18,7 +18,6 @@
   ],
   "dependencies": {
     "express": "^4.16.2",
-    "matter-js": "^0.13.0",
     "osc": "2.2.0",
     "ws": "1.1.0"
   }
