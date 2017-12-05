@@ -4,7 +4,7 @@ var mQuadVBO = null;
 var mQuadTVBO = null;
 var mProgram = null;
 var screenProgram = null;
-var mInputs = [null, null, null, null];
+var mInputs = [null, null, null, null, null, null, null, null];
 var mInputsStr = "";
 var mOSCStr = "";
 var mMIDIStr = "";
@@ -12,8 +12,9 @@ var vsScreen = null;
 var vsDraw = null;
 var elapsedBandPeaks = [0.0, 0.0, 0.0, 0.0];
 //unifoms
-var vertPosU, l2, l3, l4, l5, l6, l7, l8, ch0, ch1, ch2, ch3, ch4, bs, screenResU, screenTexU, screenBlendU, translateUniform, scaleUniform, rotateUniform, gammaU, bandsTimeU, midiU;
+var vertPosU, l2, l3, l4, l5, l6, l7, l8, ch0, ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8, bs, screenResU, screenTexU, screenBlendU, translateUniform, scaleUniform, rotateUniform, gammaU, bandsTimeU, midiU;
 var resos = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+resos = resos.concat(resos);
 var oscM = [null, null, null, null, null, null, null, null, null, null];
 var gammaValues = [1.0, 1.0, 1.0, 1.0];
 
@@ -25,6 +26,10 @@ var testTexture;
 
 var webcamTexture;
 var webcam;
+
+var videos = [null, null, null, null];
+var videoTextures = [null, null, null, null];
+var videosReady = [false, false, false, false];
 
 var webcamSnapshotTexture;
 var takeSnapshot = true;
@@ -200,6 +205,10 @@ function newShader(vs, shaderCode) {
     ch3 = gl.getUniformLocation(mProgram, "channel3");
     ch4 = gl.getUniformLocation(mProgram, "backbuffer");
     //TODO cam-background - add something here (why?)
+    ch5 = gl.getUniformLocation(mProgram, "channel5");
+    ch6 = gl.getUniformLocation(mProgram, "channel6");
+    ch7 = gl.getUniformLocation(mProgram, "channel7");
+    ch8 = gl.getUniformLocation(mProgram, "channel8");
 
     bs = gl.getUniformLocation(mProgram, "bands");
     bandsTimeU = gl.getUniformLocation(mProgram, "bandsTime");
@@ -344,8 +353,43 @@ function getHeaderSize() {
 }
 
 
+function setupVideo(url, ind) {
+  const video = document.createElement('video');
+
+  var playing = false;
+  var timeupdate = false;
+
+  video.autoplay = true;
+  video.muted = true;
+  video.loop = true;
+
+  // Waiting for these 2 events ensures
+  // there is data in the video
+
+  video.addEventListener('playing', function() {
+     playing = true;
+     checkReady();
+  }, true);
+
+  video.addEventListener('timeupdate', function() {
+     timeupdate = true;
+     checkReady();
+  }, true);
+
+  video.src = url;
+  video.play();
+
+  function checkReady() {
+    if (playing && timeupdate) {
+      videosReady[ind] = true;
+    }
+  }
+
+  return video;
+}
+
 // will set to true when video can be copied to texture
-var copyVideo = false;
+var webcamReady = false;
 
 function setupWebcam() {
   const video = document.createElement('video');
@@ -386,7 +430,7 @@ function setupWebcam() {
 
   function checkReady() {
     if (playing && timeupdate) {
-      copyVideo = true;
+      webcamReady = true;
     }
   }
 
@@ -421,6 +465,18 @@ function initVideoTexture(gl, url) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
   return texture;
+}
+
+function createNewVideoTexture(gl, url, ind){
+    var textureObj = initVideoTexture(gl, url);
+    var video = setupVideo(url, ind);
+    texture = {};
+    texture.globject = textureObj;
+    texture.type = "tex_2D";
+    texture.image = {height: video.height, video: video.width};
+    texture.loaded = true; //this is ok to do because the update loop checks videosReady[]
+    videos[ind] = video;
+    videoTextures[ind] = texture;
 }
 
 function updateVideoTexture(gl, texture, video) {
@@ -568,6 +624,7 @@ function paint() {
 
     //init dimensions
     resos = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    resos = resos.concat(resos);
 
     //add uniform stuff
     if (l2 !== null) gl.uniform1f(l2, (Date.now() - mTime) * 0.001);
@@ -581,6 +638,10 @@ function paint() {
     if (ch2 !== null) gl.uniform1i(ch2, 2);
     if (ch3 !== null) gl.uniform1i(ch3, 3);
     if (ch4 !== null) gl.uniform1i(ch4, 4); //backbuffer
+    if (ch5 !== null) gl.uniform1i(ch5, 5);
+    if (ch6 !== null) gl.uniform1i(ch6, 6);
+    if (ch7 !== null) gl.uniform1i(ch7, 7);
+    if (ch8 !== null) gl.uniform1i(ch8, 8);
     //TODO cam-background - add something here (why?) (setting gl.TEXTURE[i] value?)
 
     // gl.bindBuffer( gl.ARRAY_BUFFER, mQuadVBO);
