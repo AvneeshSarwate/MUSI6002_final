@@ -30,7 +30,7 @@ vec3 diffColor(){
 
     float section2 = floor(xy.y*30.0 * cos(time/7.)); 
     float tile2 = mod(section2, 2.);
-    float timeMod = time - (1. * floor(time/1.));
+    float timeMod = time - (1. * floor(time/1.)); 
     
     return vec3(tile, tile2, timeMod);
 }
@@ -42,7 +42,7 @@ vec3 diffColor2() {
 
 void main () {
     vec2 stN = uvN();
-    vec3 snap = texture2D(channel3, vec2(1. -stN.x, stN.y)).rgb; 
+    vec3 snap = texture2D(channel3, vec2(1. -stN.x, stN.y)).rgb;  
     vec3 cam = texture2D(channel0, vec2(1. -stN.x, stN.y)).rgb; 
     vec3 bb = texture2D(backbuffer, vec2(stN.x, stN.y)).rgb;
     vec3 col = diffColor();
@@ -50,9 +50,9 @@ void main () {
     vec3 c;
     float lastFeedback = texture2D(backbuffer, vec2(stN.x, stN.y)).a;
     float feedback; 
-    float decay = 0.995;
+    float decay = 0.99;
     
-    if(colourDistance(cam, snap) > 0.5){
+    if(colourDistance(cam, snap) > 0.8){
         if(lastFeedback < 1.) {
             feedback = 1.;
             c = col;
@@ -62,9 +62,9 @@ void main () {
         }
     }
     else {
+        feedback = lastFeedback * decay;
         if(lastFeedback > 0.5) {
-            feedback = lastFeedback * decay;
-            c = mix(snap, bb, lastFeedback);
+            c = mix(snap, col, lastFeedback); //swap col for bb for glitchier effect
         } else {
             c = cam;
         }
