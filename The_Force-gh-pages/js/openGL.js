@@ -23,10 +23,10 @@ var fsNew = "void main () {\n\tgl_FragColor = vec4(black, 1.0);\n}";
 var testingImage = false;
 var testTexture;
 
-var videoTexture;
-var video;
+var webcamTexture;
+var webcam;
 
-var videoSnapshotTexture;
+var webcamSnapshotTexture;
 var takeSnapshot = true;
 
 function createGlContext() {
@@ -347,7 +347,7 @@ function getHeaderSize() {
 // will set to true when video can be copied to texture
 var copyVideo = false;
 
-function setupVideo(url) {
+function setupWebcam() {
   const video = document.createElement('video');
 
 

@@ -605,9 +605,9 @@ $( document ).ready(function()
                     break;
 
                 case "tex_webcam":
-                    texture.globject = videoTexture;
+                    texture.globject = webcamTexture;
                     texture.type = "tex_2D";
-                    texture.image = {height: video.height, width: video.width};
+                    texture.image = {height: webcam.height, width: webcam.width};
                     texture.loaded = copyVideo;
                     break;
 
@@ -1023,15 +1023,15 @@ $( document ).ready(function()
         }
 
         if (copyVideo) {
-          updateVideoTexture(gl, videoTexture, video);
+          updateVideoTexture(gl, webcamTexture, webcam);
         }
 
         if(copyVideo && takeSnapshot){
-            updateVideoTexture(gl, videoSnapshotTexture, video);
+            updateVideoTexture(gl, webcamSnapshotTexture, webcam);
             var texture = {};
-            texture.globject = videoSnapshotTexture;
+            texture.globject = webcamSnapshotTexture;
             texture.type = "tex_2D";
-            texture.image = {height: video.height, width: video.width};
+            texture.image = {height: webcam.height, width: webcam.width};
             texture.loaded = copyVideo;
             mInputs[3] = texture; //channel3 is hardcoded as webcam snapshot
             takeSnapshot = false;
@@ -1041,11 +1041,11 @@ $( document ).ready(function()
         paint();
     }
 
-    video = setupVideo("./starfield.mov");
-    videoTexture = initVideoTexture(gl, "blankurl");
+    webcam = setupWebcam();
+    webcamTexture = initVideoTexture(gl, "blankurl");
 
 
-    videoSnapshotTexture = initVideoTexture(gl, "blankurl");
+    webcamSnapshotTexture = initVideoTexture(gl, "blankurl");
 
     mTime = Date.now();
     renderLoop2();
