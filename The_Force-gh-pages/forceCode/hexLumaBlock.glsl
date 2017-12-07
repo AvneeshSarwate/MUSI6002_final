@@ -180,13 +180,24 @@ vec2 hexCenter2(vec2 p, float size){
 }
 
 vec2 trans(vec2 u){
-    return u;
+    return u*10.;
+}
+
+bool inSampleSet(vec2 p, vec2 center, float size){
+    bool contained = false;
+    for(float i = 0.; i < 6.; i++){
+        float rad = PI / 8. + i * PI / 3.;
+        vec2 corner = rotate(center, vec2(center.x+size, center.y), rad);
+        vec2 samp = mix(center, corner, 0.7);
+        contained = contained || distance(p, samp) < 0.05;
+    }
+    return contained;
 }
 
 void main(){
 
     // Aspect correct screen coordinates.
-    vec2 u = trans(uv()*10.);
+    vec2 u = trans(uv());
     
     // Scaling, translating, then converting it to a hexagonal grid cell coordinate and
     // a unique coordinate ID. The resultant vector contains everything you need to produce a
@@ -203,16 +214,19 @@ void main(){
     vec2 diffVec = u - codec;
     float diff = sqrt(dot(diffVec, diffVec));
     
-    vec2 c = hexCenter2(u, 0.5);
+    vec2 c = hexCenter2(u,size);
+    float dist = distance(c, u);
+    
+    float sampled = inSampleSet(u, c, size) ? 1. : 0.;
     
     float eDist = hex(h.xy); // Edge distance.
     float cDist = sqrt(dot(h.xy, h.xy)); // Relative squared distance from the center.
     // float radius = eDist > 0.49 ? 1. : 0.;
-    float radius = sqrt(dot(u.xy, c.xy)) == 0. ? 1. : 0.;
+    float radius = dist < .861 ? 1. : 0.;
 
     
     
     // Rough gamma correction.    
- gl_FragColor = vec4(vec2(codec), 1, 1);
+ gl_FragColor = vec4(vec3(sampled), 1);
     
 }
