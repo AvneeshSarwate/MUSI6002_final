@@ -163,7 +163,7 @@ vec3 oddr_to_cube(vec2 hex){
 
 vec2 hex_to_pixel(vec2 hex, float size){
     float x = size * sqrt(3.) * (hex.x + hex.y/2.);
-    float y = size * 3./2. * hex.r;
+    float y = size * 3./2. * hex.y;
     return vec2(x, y);
 }
 
@@ -186,7 +186,7 @@ vec2 trans(vec2 u){
 void main(){
 
     // Aspect correct screen coordinates.
-    vec2 u = trans(uv())*5.;
+    vec2 u = trans(uv()*10.);
     
     // Scaling, translating, then converting it to a hexagonal grid cell coordinate and
     // a unique coordinate ID. The resultant vector contains everything you need to produce a
@@ -203,7 +203,7 @@ void main(){
     vec2 diffVec = u - codec;
     float diff = sqrt(dot(diffVec, diffVec));
     
-    vec2 c = hexCenter2(u, 1.);
+    vec2 c = hexCenter2(u, 0.5);
     
     float eDist = hex(h.xy); // Edge distance.
     float cDist = sqrt(dot(h.xy, h.xy)); // Relative squared distance from the center.
@@ -213,6 +213,6 @@ void main(){
     
     
     // Rough gamma correction.    
- gl_FragColor = vec4(vec2(hexV), 1, 1);
+ gl_FragColor = vec4(vec2(codec), 1, 1);
     
 }
