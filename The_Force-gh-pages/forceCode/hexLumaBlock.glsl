@@ -70,6 +70,11 @@ float hex(in vec2 p){
     
 }
 
+vec2 hexCenter(vec2 pt){
+    vec4 hC = floor(vec4(pt, pt - vec2(.5, 1.))/s.xyxy) + .5;
+    return dot(hC.xy, pt) < dot(hC.zw, pt) ? hC.xy : hC.zw;
+}
+
 // This function returns the hexagonal grid coordinate for the grid cell, and the corresponding 
 // hexagon cell ID - in the form of the central hexagonal point. That's basically all you need to 
 // produce a hexagonal grid.
@@ -85,7 +90,7 @@ vec4 getHex(vec2 p){
     // the two sets are stored in a "vec4" in order to group some calculations together. The hexagon
     // center we'll eventually use will depend upon which is closest to the current point. Since 
     // the central hexagon point is unique, it doubles as the unique hexagon ID.
-    vec4 hC = floor(vec4(p, p - vec2(.5, 1))/s.xyxy) + .5;
+    vec4 hC = floor(vec4(p, p - vec2(.5, 1.))/s.xyxy) + .5;
     
     // Centering the coordinates with the hexagon centers above.
     vec4 h = vec4(p - hC.xy*s, p - (hC.zw + .5)*s);
@@ -101,23 +106,58 @@ vec4 getHex(vec2 p){
     
 }
 
+vec2 trans(vec2 u){
+    return u*10.;
+}
+
+
+vec2 cube_to_axial(vec3 cube){
+    float q = cube.x;
+    float r = cube.z;
+    return vec2(q, r);
+}
+
+vec3 axial_to_cube(vec3 hex){
+    float x = hex.x;
+    float z = hex.y;
+    float y = -x-z;
+    return vec3(x, y, z);
+}
+
+
+vec2 cube_to_oddr(vec3 cube){
+      float col = cube.x + (cube.z - mod(cube.z,2.)) / 2.;
+      float row = cube.z;
+      return vec2(col, row);
+}
+
+vec3 oddr_to_cube(vec2 hex){
+      float x = hex.x - (hex.x - mod(hex.x,2.)) / 2.;
+      float z = hex.y;
+      float y = -x-z;
+      return vec3(x, y, z);
+}
+
 void main(){
 
     // Aspect correct screen coordinates.
-    vec2 u = uv();
+    vec2 u = trans(uv());
     
     // Scaling, translating, then converting it to a hexagonal grid cell coordinate and
     // a unique coordinate ID. The resultant vector contains everything you need to produce a
     // pretty pattern, so what you do from here is up to you.
-    vec4 h = getHex(u*2. + s.yx*1./2.);
+    vec4 h = getHex(u);
     
     // The beauty of working with hexagonal centers is that the relative edge distance will simply 
     // be the value of the 2D isofield for a hexagon.
     //
     
+    vec2 c = hexCenter(u);
+    
     float eDist = hex(h.xy); // Edge distance.
     float cDist = sqrt(dot(h.xy, h.xy)); // Relative squared distance from the center.
     float radius = eDist > 0.49 ? 1. : 0.;
+    // float radius = sqrt(dot(u.xy, c.xy)) < 0.1 ? 1. : 0.;
 
     
     // Using the idetifying coordinate - stored in "h.zw," to produce a unique random number
@@ -131,6 +171,6 @@ void main(){
     
     
     // Rough gamma correction.    
-    gl_FragColor = vec4(vec3(radius), 1);
+//  gl_FragColor = vec4(vec3(cDist), 1);
     
 }
