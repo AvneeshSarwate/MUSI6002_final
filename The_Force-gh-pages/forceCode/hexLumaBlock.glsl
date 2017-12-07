@@ -72,10 +72,6 @@ vec2 hexCenter2(vec2 p, float size){
     return hex_to_pixel(hex_round(pixel_to_hex(p, size)), size);
 }
 
-vec2 trans(vec2 u){
-    return u*3.;
-}
-
 bool inSampleSet(vec2 p, vec2 center){
     float size = 1.;
     bool contained = false;
@@ -90,24 +86,37 @@ bool inSampleSet(vec2 p, vec2 center){
     return contained;
 }
 
-bool hexLumAvg(vec2 p, vec2 center){
+vec3 lum(vec3 color){
+    vec3 weights = vec3(0.212, 0.7152, 0.0722);
+    return vec3(dot(color, weights));
+}
+
+float scaleval = 120.;
+
+float hexLumAvg(vec2 p, vec2 center){
     float size = 1.;
     bool contained = false;
+    float avgLum = 0.;
     for(float i = 0.; i < 6.; i++){
+        float rad = i * PI / 3.;
+        vec2 corner = rotate(vec2(center.x+size, center.y), center, rad);
         for(float j = 0.; j < 3.; j++){
-            float rad = PI / 12. + i * PI / 3.;
-            vec2 corner = rotate(vec2(center.x+size, center.y), center, rad);
-            vec2 samp = mix(center, corner, 1./(1.+j));
-            contained = contained || distance(p, samp) < 0.05;
+            vec2 samp = mix(center, corner, (0.2*(j+1.))) / scaleval;
+            vec3 cam = texture2D(channel0, vec2(samp)).xyz;
+            avgLum += lum(cam).x;
         }
     }
-    return contained;
+    return avgLum / 18.;
+}
+
+vec2 trans(vec2 u){
+    return u*scaleval;
 }
 
 void main(){
-
+    vec3 cam = texture2D(channel0, vec2(uv())).xyz;
     // Aspect correct screen coordinates.
-    vec2 u = trans(uv());
+    vec2 u = trans(uvN());
     
     float size = 1.;
     vec2 codec = hex_to_pixel(pixel_to_hex(u, size), size);
@@ -116,14 +125,16 @@ void main(){
     float diff = sqrt(dot(diffVec, diffVec));
     
     vec2 c = hexCenter2(u,size);
-    float dist = distance(c, u);
+    float dist = distance(c/scaleval, u/scaleval)*scaleval;
     
     float sampled = inSampleSet(u, c) ? 1. : 0.;
     
     float radius = dist < .861 ? 1. : 0.;
+    
+    float avgLum = hexLumAvg(u, c);
 
     
     // Rough gamma correction.    
- gl_FragColor = vec4(vec3(dist, sampled, sampled), 1);
+ gl_FragColor = vec4(vec3(avgLum), 1);
     
 }
