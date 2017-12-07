@@ -106,24 +106,47 @@ vec4 getHex(vec2 p){
     
 }
 
-vec2 trans(vec2 u){
-    return u*10.;
-}
-
-
 vec2 cube_to_axial(vec3 cube){
     float q = cube.x;
     float r = cube.z;
     return vec2(q, r);
 }
 
-vec3 axial_to_cube(vec3 hex){
+vec3 axial_to_cube(vec2 hex){
     float x = hex.x;
     float z = hex.y;
     float y = -x-z;
     return vec3(x, y, z);
 }
 
+float round(float v){
+    return floor(v+0.5);
+}
+
+vec3 cube_round(vec3 cube){
+    float rx = round(cube.x);
+    float ry = round(cube.y);
+    float rz = round(cube.z);
+
+    float x_diff = abs(rx - cube.x);
+    float y_diff = abs(ry - cube.y);
+    float z_diff = abs(rz - cube.z);
+
+    if (x_diff > y_diff && x_diff > z_diff){
+        rx = -ry-rz;
+    }
+    else if (y_diff > z_diff) {
+        ry = -rx-rz;
+    } else{
+        rz = -rx-ry;
+    }
+
+    return vec3(rx, ry, rz);
+}
+
+vec2 hex_round(vec2 hex){
+    return cube_to_axial(cube_round(axial_to_cube(hex)));
+}
 
 vec2 cube_to_oddr(vec3 cube){
       float col = cube.x + (cube.z - mod(cube.z,2.)) / 2.;
@@ -138,10 +161,38 @@ vec3 oddr_to_cube(vec2 hex){
       return vec3(x, y, z);
 }
 
+vec2 hex_to_pixel(vec2 hex, float size){
+    float x = size * sqrt(3.) * (hex.x + hex.y/2.);
+    float y = size * 3./2. * hex.r;
+    return vec2(x, y);
+}
+
+vec2 pixel_to_hex(float x, float y, float size){
+    float q = (x * sqrt(3.)/3. - y / 3.) / size;
+    float r = y * 2./3. / size;
+    return vec2(q, r);
+}
+
+vec2 pixel_to_hex(vec2 p, float size){
+    float x = p.x;
+    float y = p.y;
+    float q = (x * sqrt(3.)/3. - y / 3.) / size;
+    float r = y * 2./3. / size;
+    return vec2(q, r);
+}
+
+vec2 hexCenter2(vec2 p, float size){
+    return hex_to_pixel(hex_round(pixel_to_hex(p.x, p.y, size)), size);
+}
+
+vec2 trans(vec2 u){
+    return u*1.;
+}
+
 void main(){
 
     // Aspect correct screen coordinates.
-    vec2 u = trans(uv());
+    vec2 u = trans(uv()*4.);
     
     // Scaling, translating, then converting it to a hexagonal grid cell coordinate and
     // a unique coordinate ID. The resultant vector contains everything you need to produce a
@@ -152,12 +203,16 @@ void main(){
     // be the value of the 2D isofield for a hexagon.
     //
     
-    vec2 c = hexCenter(u);
+    float size = 10.;
+    vec2 diffVec = u- hex_to_pixel(pixel_to_hex(u, size), size);
+    float diff = sqrt(dot(diffVec, diffVec));
+    
+    vec2 c = hexCenter2(u, 1.);
     
     float eDist = hex(h.xy); // Edge distance.
     float cDist = sqrt(dot(h.xy, h.xy)); // Relative squared distance from the center.
-    float radius = eDist > 0.49 ? 1. : 0.;
-    // float radius = sqrt(dot(u.xy, c.xy)) < 0.1 ? 1. : 0.;
+    // float radius = eDist > 0.49 ? 1. : 0.;
+    float radius = sqrt(dot(u.xy, c.xy)) == 0. ? 1. : 0.;
 
     
     // Using the idetifying coordinate - stored in "h.zw," to produce a unique random number
@@ -171,6 +226,6 @@ void main(){
     
     
     // Rough gamma correction.    
-//  gl_FragColor = vec4(vec3(cDist), 1);
+ gl_FragColor = vec4(vec3(diff), 1);
     
 }
