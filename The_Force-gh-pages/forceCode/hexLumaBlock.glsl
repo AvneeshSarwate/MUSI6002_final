@@ -167,12 +167,6 @@ vec2 hex_to_pixel(vec2 hex, float size){
     return vec2(x, y);
 }
 
-vec2 pixel_to_hex(float x, float y, float size){
-    float q = (x * sqrt(3.)/3. - y / 3.) / size;
-    float r = y * 2./3. / size;
-    return vec2(q, r);
-}
-
 vec2 pixel_to_hex(vec2 p, float size){
     float x = p.x;
     float y = p.y;
@@ -182,17 +176,17 @@ vec2 pixel_to_hex(vec2 p, float size){
 }
 
 vec2 hexCenter2(vec2 p, float size){
-    return hex_to_pixel(hex_round(pixel_to_hex(p.x, p.y, size)), size);
+    return hex_to_pixel(hex_round(pixel_to_hex(p, size)), size);
 }
 
 vec2 trans(vec2 u){
-    return u*1.;
+    return u;
 }
 
 void main(){
 
     // Aspect correct screen coordinates.
-    vec2 u = trans(uv()*4.);
+    vec2 u = trans(uv())*5.;
     
     // Scaling, translating, then converting it to a hexagonal grid cell coordinate and
     // a unique coordinate ID. The resultant vector contains everything you need to produce a
@@ -203,8 +197,10 @@ void main(){
     // be the value of the 2D isofield for a hexagon.
     //
     
-    float size = 10.;
-    vec2 diffVec = u- hex_to_pixel(pixel_to_hex(u, size), size);
+    float size = 1.;
+    vec2 codec = hex_to_pixel(pixel_to_hex(u, size), size);
+    vec2 hexV = pixel_to_hex(u, size);
+    vec2 diffVec = u - codec;
     float diff = sqrt(dot(diffVec, diffVec));
     
     vec2 c = hexCenter2(u, 1.);
@@ -215,17 +211,8 @@ void main(){
     float radius = sqrt(dot(u.xy, c.xy)) == 0. ? 1. : 0.;
 
     
-    // Using the idetifying coordinate - stored in "h.zw," to produce a unique random number
-    // for the hexagonal grid cell.
-    float rnd = hash21(h.zw);
-    rnd = sin(rnd*6.283 + time*1.5)*.5 + .5; // Animating the random number.
-    
-    // It's possible to control the randomness to form some kind of repeat pattern.
-    //rnd = mod(h.z + h.w, 4.)/3.;
-    
-    
     
     // Rough gamma correction.    
- gl_FragColor = vec4(vec3(diff), 1);
+ gl_FragColor = vec4(vec2(hexV), 1, 1);
     
 }
