@@ -1,49 +1,49 @@
 /*
 
 
-	Minimal Hexagonal Grid
-	----------------------
+    Minimal Hexagonal Grid
+    ----------------------
 
-	This is not exactly a cutting edge example, but I'd almost say getting comfortable
-	with a hexagonal grid is mandatory when it comes to creating interesting patterns.
-	Therefore, I've put this up - as an additional alternative to the other beginner 
-	references - for anyone who wants to get a start.
-	
-	In regard to tesselating a grid with a single regular polygon, you have a choice 
-	between a triangle, a square or a hexagon (unless I'm overlooking one). The hexagon 
-	has the most sides, which means it provides the most interesting combinations. A
-	great example of this would be BigWings's "Hexagonal Truchet Weaving" shader.
+    This is not exactly a cutting edge example, but I'd almost say getting comfortable
+    with a hexagonal grid is mandatory when it comes to creating interesting patterns.
+    Therefore, I've put this up - as an additional alternative to the other beginner 
+    references - for anyone who wants to get a start.
+    
+    In regard to tesselating a grid with a single regular polygon, you have a choice 
+    between a triangle, a square or a hexagon (unless I'm overlooking one). The hexagon 
+    has the most sides, which means it provides the most interesting combinations. A
+    great example of this would be BigWings's "Hexagonal Truchet Weaving" shader.
 
-	There are a few different methods used to construct a hexagonal grid. Everyone
-	has their preference, but I like to obtain the nearest hexagon center with the least
-	amount of effort (fewest operations), then render a	2D isosurface around it.
+    There are a few different methods used to construct a hexagonal grid. Everyone
+    has their preference, but I like to obtain the nearest hexagon center with the least
+    amount of effort (fewest operations), then render a 2D isosurface around it.
 
-	If the 2D surface happens to be a hexagon, the return value will represent the 
-	nearest	edge distance - since isosurfaces give boundary distances by design. 
-	Rendering a circle around the cell center will be analogous to a Euclidian hexagon 
-	center distance.
+    If the 2D surface happens to be a hexagon, the return value will represent the 
+    nearest edge distance - since isosurfaces give boundary distances by design. 
+    Rendering a circle around the cell center will be analogous to a Euclidian hexagon 
+    center distance.
 
     It's also trivial to take the nearest hexagonal center point to produce a relative 
-	position for the cell and a unique hexagonal grid cell ID.
+    position for the cell and a unique hexagonal grid cell ID.
 
-	Anyway, I've explained the process in more detail below. It's one of those things 
-	that is easy to perform, but less easy to explain. However, I believe the code 
-	should make it more clear.
+    Anyway, I've explained the process in more detail below. It's one of those things 
+    that is easy to perform, but less easy to explain. However, I believe the code 
+    should make it more clear.
 
-	By the way, if anyone spots any errors, or knows of ways to improve the operation 
-	count in the "getHex" function, then feel free to let me know.
+    By the way, if anyone spots any errors, or knows of ways to improve the operation 
+    count in the "getHex" function, then feel free to let me know.
 
-	Related references:
-	
-	// Uses the same principle. I stuck with my own code (adapted from my "Hexagonal 
+    Related references:
+    
+    // Uses the same principle. I stuck with my own code (adapted from my "Hexagonal 
     // Blocks" example), but I liked the simpler way Iomateron compared distances, so 
-	// I've adopted that portion of his code.
-	Iomateron - simple hexagonal tiles
-	https://www.shadertoy.com/view/MlXyDl
+    // I've adopted that portion of his code.
+    Iomateron - simple hexagonal tiles
+    https://www.shadertoy.com/view/MlXyDl
 
-	// You can't do a hexagonal grid example without referencing this. :) Very stylish.
-	Hexagons - distance - iq
-	https://www.shadertoy.com/view/Xd2GR3
+    // You can't do a hexagonal grid example without referencing this. :) Very stylish.
+    Hexagons - distance - iq
+    https://www.shadertoy.com/view/Xd2GR3
 
 */
 
@@ -104,18 +104,20 @@ vec4 getHex(vec2 p){
 void main(){
 
     // Aspect correct screen coordinates.
-	vec2 u = uv();
+    vec2 u = uv();
     
     // Scaling, translating, then converting it to a hexagonal grid cell coordinate and
     // a unique coordinate ID. The resultant vector contains everything you need to produce a
     // pretty pattern, so what you do from here is up to you.
-    vec4 h = getHex(u*3. + s.yx*1./2.);
+    vec4 h = getHex(u*2. + s.yx*1./2.);
     
     // The beauty of working with hexagonal centers is that the relative edge distance will simply 
     // be the value of the 2D isofield for a hexagon.
     //
+    
     float eDist = hex(h.xy); // Edge distance.
-    float cDist = dot(h.xy, h.xy); // Relative squared distance from the center.
+    float cDist = sqrt(dot(h.xy, h.xy)); // Relative squared distance from the center.
+    float radius = eDist > 0.49 ? 1. : 0.;
 
     
     // Using the idetifying coordinate - stored in "h.zw," to produce a unique random number
@@ -128,36 +130,7 @@ void main(){
     
     
     
-    // Initiate the background to an off white color.
-    vec3 col = vec3(1, .95, .9);
-
-    
-    // Using the random number associated with the hexagonal grid cell to provide some color
-    // and some smooth blinking. The coloring was made up, but it's worth looking at the 
-    // "blink" line which smoothly blinks the cell color on and off.
-    //
-    float blink = smoothstep(0., .125, rnd - .666); // Smooth blinking transition.
-    float blend = dot(sin(u*3.14159*2. - cos(u.yx*3.14159*2.)*3.14159), vec2(.25)) + .5; // Screen blend.
-    col = max(col - mix(vec3(0, .4, .6), vec3(0, .3, .7), blend)*blink, 0.); // Blended, blinking orange.
-    col = mix(col, col.xzy, dot(sin(u*6. - cos(u*3. + time)), vec2(.4/2.)) + .4); // Orange and pink mix.
-    
-    // Uncomment this if you feel that greener shades are not being fairly represented. :)
-    //col = mix(col, col.yxz, dot(cos(u*6. + sin(u*3. - iTime)), vec2(.35/2.)) + .35); // Add some green.
-
-    
-    // Using the edge distance to produce some repeat contour lines. Standard stuff.
-    float cont = clamp(cos(eDist*6.283*12.)*1. + .95, 0., 1.);
-    cont = mix(cont, clamp(cos(eDist*6.283*12./2.)*1. + .95, 0., 1.), .125);
-    col = mix(col, vec3(0), (1.-cont)*.95);
-    
-    // Putting in some dark borders.
-    col = mix(col, vec3(0), smoothstep(0., .03, eDist - .5 + .04));
-  
-    // Using the two distance variables to give the pattern a bit of highthing.
-    col *= max(1.25 - eDist*1.5, 0.);
-    col *= max(1.25 - cDist*2., 0.);
-    
     // Rough gamma correction.    
-	gl_FragColor = vec4(sqrt(max(col, 0.)), 1);
+    gl_FragColor = vec4(vec3(radius), 1);
     
 }
