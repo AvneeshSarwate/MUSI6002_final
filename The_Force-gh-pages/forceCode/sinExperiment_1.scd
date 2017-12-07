@@ -55,4 +55,7 @@ Task({
 
 )
 
-5.tri
+SuperDirt.start
+Platform.userExtensionDir
+Quarks.gui
+SuperDirt.browse
