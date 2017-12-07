@@ -80,10 +80,10 @@ bool inSampleSet(vec2 p, vec2 center){
     float size = 1.;
     bool contained = false;
     for(float i = 0.; i < 6.; i++){
-        float rad = PI / 8. + i * PI / 3.;
-        vec2 corner = rotate(center, vec2(center.x+size, center.y), rad);
+        float rad = i * PI / 3.;
+        vec2 corner = rotate(vec2(center.x+size, center.y), center, rad);
         for(float j = 0.; j < 3.; j++){
-            vec2 samp = mix(center, corner, 1./(1.+j));
+            vec2 samp = mix(center, corner, (0.2*(j+1.)));
             contained = contained || distance(p, samp) < 0.05;
         }
     }
@@ -95,8 +95,8 @@ bool hexLumAvg(vec2 p, vec2 center){
     bool contained = false;
     for(float i = 0.; i < 6.; i++){
         for(float j = 0.; j < 3.; j++){
-            float rad = PI / 8. + i * PI / 3.;
-            vec2 corner = rotate(center, vec2(center.x+size, center.y), rad);
+            float rad = PI / 12. + i * PI / 3.;
+            vec2 corner = rotate(vec2(center.x+size, center.y), center, rad);
             vec2 samp = mix(center, corner, 1./(1.+j));
             contained = contained || distance(p, samp) < 0.05;
         }
