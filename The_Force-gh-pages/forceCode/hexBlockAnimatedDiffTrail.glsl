@@ -224,11 +224,14 @@ void main () {
     vec3 c;
     float lastFeedback = texture2D(backbuffer, vec2(stN.x, stN.y)).a; 
     float feedback; 
-    float decay = 0.975;
+    float decay = 0.98;
     float blockColor = block(50.+ sinN(time/2.) * 40., 7.+sinN(time/1.5)*10.) + 0.01;
     float lumBlend = 0.25;
     
-    if(colourDistance(cam, snap) > 0.6){
+    float hexDiff = hexDiffAvg(stN, 90.);
+    float pointDiff = colourDistance(cam, snap);
+    
+    if(hexDiff > 0.8){
         if(lastFeedback < 1.) {
             feedback = 1.;
             c = col * pow(blockColor, lumBlend);
@@ -239,10 +242,12 @@ void main () {
     }
     else {
         feedback = lastFeedback * decay;
-        if(lastFeedback > 0.5) {
-            c = mix(snap, col * pow(blockColor, lumBlend), lastFeedback); //swap col for bb for glitchier effect
+        if(lastFeedback > 0.1) { //if you put this below 1 you might have never-fading shadows 
+            c = mix(t1, col * pow(blockColor, lumBlend), lastFeedback); //swap col for bb for glitchier effect
         } else {
+            feedback = 0.;
             c = t1;
+            //c = vec3(0.);
         }
     }
     
