@@ -38,7 +38,7 @@ vec3 cube_round(vec3 cube){
 }
 
 vec2 hex_round(vec2 hex){
-    return cube_to_axial(cube_round(axial_to_cube(hex)));
+    return cube_to_axial(cube_round(axial_to_cube(hex))); 
 }
 
 vec2 cube_to_oddr(vec3 cube){
@@ -91,32 +91,61 @@ vec3 lum(vec3 color){
     return vec3(dot(color, weights));
 }
 
-float scaleval = 120.;
+//float scaleval = 110.;
 
-float hexLumAvg(vec2 p, vec2 center){
-    float size = 1.;
+float hexLumAvg(vec2 p, float numHex){
+    vec2 p2 = p * numHex;
+    vec2 center = hexCenter2(p2, 1.);
     bool contained = false;
     float avgLum = 0.;
     for(float i = 0.; i < 6.; i++){
         float rad = i * PI / 3.;
-        vec2 corner = rotate(vec2(center.x+size, center.y), center, rad);
+        vec2 corner = rotate(vec2(center.x+1., center.y), center, rad);
         for(float j = 0.; j < 3.; j++){
-            vec2 samp = mix(center, corner, (0.2*(j+1.))) / scaleval;
-            vec3 cam = texture2D(channel0, vec2(samp)).xyz;
+            vec2 samp = mix(center, corner, (0.2*(j+1.))) / numHex;
+            vec3 cam = texture2D(channel0, vec2(1.-samp.x, samp.y)).xyz;
             avgLum += lum(cam).x;
         }
     }
     return avgLum / 18.;
 }
 
-vec2 trans(vec2 u){
+float colourDistance(vec3 e1, vec3 e2) {
+  float rmean = (e1.r + e2.r ) / 2.;
+  float r = e1.r - e2.r;
+  float g = e1.g - e2.g;
+  float b = e1.b - e2.b;
+  return sqrt((((512.+rmean)*r*r)/256.) + 4.*g*g + (((767.-rmean)*b*b)/256.));
+}
+
+float hexDiffAvg(vec2 p, float numHex){
+    vec2 p2 = p * numHex;
+    vec2 center = hexCenter2(p2, 1.);
+    bool contained = false;
+    float diff = 0.;
+    for(float i = 0.; i < 6.; i++){
+        float rad = i * PI / 3.;
+        vec2 corner = rotate(vec2(center.x+1., center.y), center, rad);
+        for(float j = 0.; j < 3.; j++){
+            vec2 samp = mix(center, corner, (0.2*(j+1.))) / numHex;
+            vec3 cam = texture2D(channel0, vec2(1.-samp.x, samp.y)).xyz;
+            vec3 snap = texture2D(channel3, vec2(1.-samp.x, samp.y)).xyz;
+            diff += colourDistance(cam, snap);
+        }
+    }
+    return diff / 18.;
+}
+
+vec2 trans(vec2 u, float scaleval){
     return u*scaleval;
 }
 
 void main(){
-    vec3 cam = texture2D(channel0, vec2(uv())).xyz;
+    vec2 stN = uvN();
+    vec3 cam = texture2D(channel0, vec2(1. - stN.x, stN.y)).xyz;
     // Aspect correct screen coordinates.
-    vec2 u = trans(uvN());
+    float scaleval = 110.;
+    vec2 u = trans(uvN(), scaleval);
     
     float size = 1.;
     vec2 codec = hex_to_pixel(pixel_to_hex(u, size), size);
@@ -124,14 +153,15 @@ void main(){
     vec2 diffVec = u - codec;
     float diff = sqrt(dot(diffVec, diffVec));
     
-    vec2 c = hexCenter2(u,size);
+    
+    vec2 c = hexCenter2(stN,size);
     float dist = distance(c/scaleval, u/scaleval)*scaleval;
     
     float sampled = inSampleSet(u, c) ? 1. : 0.;
     
     float radius = dist < .861 ? 1. : 0.;
     
-    float avgLum = hexLumAvg(u, c);
+    float avgLum = hexDiffAvg(stN, scaleval);
 
     
     // Rough gamma correction.    
