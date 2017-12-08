@@ -140,12 +140,21 @@ vec2 trans(vec2 u, float scaleval){
     return u*scaleval;
 }
 
+float sinN(float t){
+   return (sin(t) + 1.) / 1.; 
+}
+
+float quant(float num, float quantLevels){
+    float roundPart = floor(fract(num*quantLevels)*2.);
+    return (floor(num*quantLevels)+roundPart)/quantLevels;
+}
+
 void main(){
     vec2 stN = uvN();
     vec3 cam = texture2D(channel0, vec2(1. - stN.x, stN.y)).xyz;
     // Aspect correct screen coordinates.
-    float scaleval = 110.;
-    vec2 u = trans(uvN(), scaleval);
+    float scaleval = 30. + sinN(time*3.) * 80.;
+    vec2 u = trans(uvN() , scaleval);
     
     float size = 1.;
     vec2 codec = hex_to_pixel(pixel_to_hex(u, size), size);
@@ -162,6 +171,7 @@ void main(){
     float radius = dist < .861 ? 1. : 0.;
     
     float avgLum = hexDiffAvg(stN, scaleval);
+    avgLum = avgLum > 0.2 ? avgLum-0.3 + rand(vec2(time, quant(stN.y+time/10., 100.)))/1.5 : 0.;
 
     
     // Rough gamma correction.    
