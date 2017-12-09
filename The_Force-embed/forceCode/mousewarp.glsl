@@ -220,6 +220,16 @@ float scale(float val, float minv, float maxv){
     return minv + val*range;
 }
 
+float indMap(float val, float ind){
+    return cosN(val * PI * pow(2., ind));
+}
+
+float twinGeo(float v, float range){
+    if(v > 0.5) return (v-0.5) * 2. * range;
+    if(v < 0.5) return 1. / (abs(v-0.5) * 2. * range);
+    return 1.;
+}
+
 void main () {
     vec2 stN = uvN();
     vec3 snap = texture2D(channel3, vec2(1. -stN.x, stN.y)).rgb;  
@@ -233,11 +243,13 @@ void main () {
     vec3 c;
     float lastFeedback = texture2D(backbuffer, vec2(stN.x, stN.y)).a; 
     float feedback; 
-    float decay = true ? 0.795 + clamp(mN.x*1.1, 0., 1.)*0.2 : 0.98;
-    float blockColor = true ? block(20.+ mN.x * 70., 2.+ mN.y *15.) + 0.01 : block(50.+ sinN(time/2.) * 40., 7.+sinN(time/1.5)*10.) + 0.01;
-    float lumBlend = true ? pow(2., scale(mN.x, -2., 4.)) : 0.25;
-    float numHex = true ? 30. + mN.x * 90. : 90.;
-    float shadowSpeed = 1./5.;
+    float decay = true ? 0.795 + clamp(indMap(mN.x, 0.)*1.1, 0., 1.)*0.2 : 0.98;
+    float blockColor = true ? block(20.+ indMap(mN.x, 1.) * 70., 2.+ indMap(mN.y, 0.) *15.) + 0.01 : block(50.+ sinN(time/2.) * 40., 7.+sinN(time/1.5)*10.) + 0.01;
+    float lumBlend = true ? pow(2., scale(indMap(mN.y, 1.), -2., 4.)) : 0.25;
+    float numHex = true ? 30. + indMap(mN.x, 2.) * 90. : 90.;
+    float shadowSpeed = true ? twinGeo(indMap(mN.y, 2.), 5.): 1./5.;
+    float backZoom = 1.;
+    float shadowZoom = 1.;
     
     vec3 col = diffColor(time * shadowSpeed);
     float hexDiff = hexDiffAvg(stN, numHex);
