@@ -214,6 +214,12 @@ float block(float numBlocks, float quantLevel) {
     return quant(blockAvgLuma, quantLevel);
 }
 
+//val assumed between 0 - 1
+float scale(float val, float minv, float maxv){
+    float range = maxv - minv;
+    return minv + val*range;
+}
+
 void main () {
     vec2 stN = uvN();
     vec3 snap = texture2D(channel3, vec2(1. -stN.x, stN.y)).rgb;  
@@ -221,18 +227,20 @@ void main () {
     vec3 bb = texture2D(backbuffer, vec2(stN.x, stN.y)).rgb;
     vec3 t1 = texture2D(channel1, vec2(1. -stN.x, stN.y)).rgb;
     vec4 mN = mouse / resolution.xyxy /2.;
+    // t1 = vec3(0.);
     
 
     vec3 c;
     float lastFeedback = texture2D(backbuffer, vec2(stN.x, stN.y)).a; 
     float feedback; 
-    float decay = false ? 0.795 + clamp(mN.x*1.1, 0., 1.)*0.2 : 0.98;
+    float decay = true ? 0.795 + clamp(mN.x*1.1, 0., 1.)*0.2 : 0.98;
     float blockColor = true ? block(20.+ mN.x * 70., 2.+ mN.y *15.) + 0.01 : block(50.+ sinN(time/2.) * 40., 7.+sinN(time/1.5)*10.) + 0.01;
-    float lumBlend = 0.25;
+    float lumBlend = true ? pow(2., scale(mN.x, -2., 4.)) : 0.25;
+    float numHex = true ? 30. + mN.x * 90. : 90.;
     float shadowSpeed = 1./5.;
     
     vec3 col = diffColor(time * shadowSpeed);
-    float hexDiff = hexDiffAvg(stN, 90.);
+    float hexDiff = hexDiffAvg(stN, numHex);
     float pointDiff = colourDistance(cam, snap);
     
     if(hexDiff > 0.8){
@@ -255,5 +263,5 @@ void main () {
         }
     }
     
-    gl_FragColor = vec4(vec3(blockColor), feedback);
+    gl_FragColor = vec4(vec3(c), feedback);
 }
