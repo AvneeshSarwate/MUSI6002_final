@@ -35,6 +35,8 @@ var videosReady = [false, false, false, false];
 var webcamSnapshotTexture;
 var takeSnapshot = true;
 
+var presetShaderCode;
+
 function createGlContext() {
     var gGLContext = null;
     var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];

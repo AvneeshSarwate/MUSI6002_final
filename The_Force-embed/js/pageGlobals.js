@@ -1068,6 +1068,10 @@ $( document ).ready(function()
     renderLoop2();
     editor.focus();
 
+    setTimeout(function() {
+        editor.setValue(defaultShader);
+        setShaderFromEditor();
+    }, 1000);
     var player =  document.getElementById('player');
     var uiUpdater = new UiUpdater();
     
