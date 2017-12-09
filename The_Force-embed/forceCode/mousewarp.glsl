@@ -145,8 +145,7 @@ float cosN(float t){
    return (cos(t) + 1.) / 1.; 
 }
 
-vec3 diffColor(float time2){
-    vec2 stN = uvN();
+vec3 diffColor(float time2, vec2 stN){
     stN = rotate(vec2(0.5+sin(time2)*0.5, 0.5+cos(time2)*0.5), stN, sin(time2));
     
     vec2 segGrid = vec2(floor(stN.x*30.0 * sin(time2/7.)), floor(stN.y*30.0 * sin(time2/7.)));
@@ -232,17 +231,10 @@ float twinGeo(float v, float range){
 
 void main () {
     vec2 stN = uvN();
-    vec3 snap = texture2D(channel3, vec2(1. -stN.x, stN.y)).rgb;  
-    vec3 cam = texture2D(channel0, vec2(1. -stN.x, stN.y)).rgb;  
-    vec3 bb = texture2D(backbuffer, vec2(stN.x, stN.y)).rgb;
-    vec3 t1 = texture2D(channel1, vec2(1. -stN.x, stN.y)).rgb;
-    vec4 mN = mouse / resolution.xyxy /2.;
-    // t1 = vec3(0.);
-    
+     vec2 camPos = vec2(1. -stN.x, stN.y);
 
-    vec3 c;
-    float lastFeedback = texture2D(backbuffer, vec2(stN.x, stN.y)).a; 
-    float feedback; 
+    vec4 mN = mouse / resolution.xyxy /2.;
+
     float decay = true ? 0.795 + clamp(indMap(mN.x, 0.)*1.1, 0., 1.)*0.2 : 0.98;
     float blockColor = true ? block(20.+ indMap(mN.x, 1.) * 70., 2.+ indMap(mN.y, 0.) *15.) + 0.01 : block(50.+ sinN(time/2.) * 40., 7.+sinN(time/1.5)*10.) + 0.01;
     float lumBlend = true ? pow(2., scale(indMap(mN.y, 1.), -2., 4.)) : 0.25;
@@ -251,8 +243,27 @@ void main () {
     float backZoom = 1.;
     float shadowZoom = 1.;
     
-    vec3 col = diffColor(time * shadowSpeed);
-    float hexDiff = hexDiffAvg(stN, numHex);
+    vec2 cent = vec2(sinN(time * sin(time/2000.)) / 2. + 0.2, cosN(sin((1. + (1.-mN.y) * 5.) * time/2000.)) / 2.);
+    vec2 z = vec2(stN.x * mN.x + (1. - mN.x)*cent.x, stN.y * mN.y + (1. - mN.y)*cent.y);
+    
+    vec2 centCam = vec2((1. - sinN(time * sin(time/2000.))) / 2. + 0.2, cosN(time * sin(time/2000.)) / 2.);
+    vec2 mouseMap = vec2(scale(indMap(mN.x, 3.), 0.5, 1.), scale(indMap(mN.y, 3.), 0.5, 1.));
+    vec2 zcam = vec2(stN.x * mouseMap.x + (1. -  mouseMap.x)*(cent.x), stN.y *  mouseMap.y + (1. -  mouseMap.y)*cent.y);
+    
+   
+    
+    vec3 snap = texture2D(channel3, camPos).rgb;  
+    vec3 cam = texture2D(channel0, camPos).rgb;  
+    vec3 bb = texture2D(backbuffer, vec2(stN.x, stN.y)).rgb;
+    vec3 t1 = texture2D(channel1, stN).rgb;
+    
+    
+    vec3 c;
+    float lastFeedback = texture2D(backbuffer, vec2(stN.x, stN.y)).a; 
+    float feedback;
+    
+    vec3 col = diffColor(time * shadowSpeed, stN);
+    float hexDiff = hexDiffAvg(zcam, numHex);
     float pointDiff = colourDistance(cam, snap);
     
     if(hexDiff > 0.8){
