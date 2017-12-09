@@ -220,22 +220,19 @@ void main () {
     vec3 cam = texture2D(channel0, vec2(1. -stN.x, stN.y)).rgb;  
     vec3 bb = texture2D(backbuffer, vec2(stN.x, stN.y)).rgb;
     vec3 t1 = texture2D(channel1, vec2(1. -stN.x, stN.y)).rgb;
-    float lastFeedback = texture2D(backbuffer, vec2(stN.x, stN.y)).a; 
+    vec4 mN = mouse / resolution.xyxy /2.;
+    
 
     vec3 c;
+    float lastFeedback = texture2D(backbuffer, vec2(stN.x, stN.y)).a; 
     float feedback; 
-    
+    float decay = false ? 0.795 + clamp(mN.x*1.1, 0., 1.)*0.2 : 0.98;
+    float blockColor = true ? block(20.+ mN.x * 70., 2.+ mN.y *15.) + 0.01 : block(50.+ sinN(time/2.) * 40., 7.+sinN(time/1.5)*10.) + 0.01;
+    float lumBlend = 0.25;
     float shadowSpeed = 1./5.;
-    float decay = 0.98;
-    float lumBlend = 1./8.;
-    float lumShift = 0.5;
-    float hexSize = 140.;
     
-    vec3 col = diffColor(time/(1./10.));
-    float blockColor = block(50.+ sinN(time/2.) * 40., 7.+sinN(time/1.5)*10.) + lumShift;
-    
-    
-    float hexDiff = hexDiffAvg(stN, hexSize);
+    vec3 col = diffColor(time * shadowSpeed);
+    float hexDiff = hexDiffAvg(stN, 90.);
     float pointDiff = colourDistance(cam, snap);
     
     if(hexDiff > 0.8){
@@ -249,7 +246,7 @@ void main () {
     }
     else {
         feedback = lastFeedback * decay;
-        if(lastFeedback > 0.1) { //if you put this below 1 you might have never-fading shadows 
+        if(lastFeedback > 0.5) { //if you put this below 1 you might have never-fading shadows 
             c = mix(t1, col * pow(blockColor, lumBlend), lastFeedback); //swap col for bb for glitchier effect
         } else {
             feedback = 0.;
@@ -258,5 +255,5 @@ void main () {
         }
     }
     
-    gl_FragColor = vec4(c, feedback);
+    gl_FragColor = vec4(vec3(blockColor), feedback);
 }
