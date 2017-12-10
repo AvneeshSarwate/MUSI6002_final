@@ -258,6 +258,23 @@ vec3 diffColor(float time2, vec2 stN){
     return vec3(tile, tile2, timeMod);
 }
 
+float hexTexAvg(vec2 p, float numHex){
+    vec2 p2 = p * numHex;
+    vec2 center = hexCenter2(p2, 1.);
+    bool contained = false;
+    float avgLum = 0.;
+    for(float i = 0.; i < 6.; i++){
+        float rad = i * PI / 3.;
+        vec2 corner = rotate(vec2(center.x+1., center.y), center, rad);
+        for(float j = 0.; j < 3.; j++){
+            vec2 samp = mix(center, corner, (0.2*(j+1.))) / numHex;
+            vec3 tex = diffColor(time / 8., samp);
+            avgLum += lum(tex).x;
+        }
+    }
+    return avgLum / 18.;
+}
+
 vec3 quant(vec3 num, float quantLevels){
     vec3 roundPart = floor(fract(num*quantLevels)*2.);
     return (floor(num*quantLevels)+roundPart)/quantLevels;
@@ -336,7 +353,7 @@ void main () {
 
     vec4 mN = mouse / resolution.xyxy /2.;
     
-    bool useVarying = false; mN.z < 0.5;
+    bool useVarying = mN.z < 0.5;
 
     float decay = useVarying ? 0.795 + clamp(indMap(mN.x, 0.)*1.1, 0., 1.)*0.2 : 0.98;
     float blockColor = useVarying ? block(20.+ indMap(mN.x, 1.) * 70., 2.+ indMap(mN.y, 0.) *15.) + 0.01 : block(50.+ sinN(time/2.) * 40., 7.+sinN(time/1.5)*10.) + 0.01;
@@ -349,29 +366,32 @@ void main () {
     vec2 cent = useVarying ? vec2(sinN(time * sin(time/2000.)) / 2. + 0.2, cosN(sin((1. + (1.-mN.y) * 5.) * time/2000.)) / 2.) : vec2(0.5);
     vec2 z = useVarying ? vec2(stN.x * mN.x + (1. - mN.x)*cent.x, stN.y * mN.y + (1. - mN.y)*cent.y) : stN;
     
-    vec2 centCam = useVarying ? vec2((1. - sinN(time * sin(time/2000.))) / 2. + 0.2, cosN(time * sin(time/2000.)) / 2.) : vec2(0.5);
-    vec2 mouseMap = useVarying ? vec2(scale(indMap(mN.x, 3.), 0.5, 1.3), scale(indMap(mN.y, 3.), 0.5, 1.3)) : mN.xy; //TODO - allow this > 1?
+    vec2 centCam = useVarying && false ? vec2((1. - sinN(time * sin(time/2000.))) / 2. + 0.2, cosN(time * sin(time/2000.)) / 2.) : vec2(0.5);
+    vec2 mouseMap = useVarying ? vec2(scale(indMap(mN.x, 3.), 0.5, 1.), scale(indMap(mN.y, 3.), 0.5, 1.)) : mN.xy; //TODO - allow this > 1?
     vec2 zcam = useVarying ? vec2(stN.x * mouseMap.x + (1. -  mouseMap.x)*(centCam.x), stN.y *  mouseMap.y + (1. -  mouseMap.y)*centCam.y) : camPos;
     
     vec3 snap = texture2D(channel3, zcam).rgb;  
     vec3 cam = texture2D(channel0, zcam).rgb;  
     vec3 bb = texture2D(backbuffer, vec2(stN.x, stN.y)).rgb;
     vec3 t1 = texture2D(channel1, stN).rgb;
+    vec3 t2 = vec3(stN.x < 0.5);
     
     vec3 c;
     float lastFeedback = texture2D(backbuffer, vec2(stN.x, stN.y)).a; 
     float feedback;
     
     vec3 col = diffColor(time * shadowSpeed, stN);
+    vec3 col2 = diffColor(time / 8., stN);
     float hexDiff = hexDiffAvg(zcam, numHex);
     float pointDiff = colourDistance(cam, snap);
     
     // CHeck Swaps of layers 
     int t = int(5.);
     vec3 col_ = mix(col, t1, mN.x);
-    vec3 t1_ = mix(t1, col, mN.y);
-    t1 = vec3(stN.x < 0.5);
-    col = v3XOR(col, t1);
+    // vec3 t1_ = mix(t1, v3XOR(lum(col2), t1), indMap(mN.y, 2.));
+    t1 = vec3(hexTexAvg(stN, 30. + indMap(mN.y, 2.) * 200.));
+    
+    // col = v3XOR(col, t1);
     
     if(hexDiff > 0.8){
         if(lastFeedback < 1.) {
