@@ -1,4 +1,3 @@
-var defaultShader = `
 // hexagon stuff from here - https://www.redblobgames.com/grids/hexagons/#hex-to-pixel
 vec2 cube_to_axial(vec3 cube){
     float q = cube.x;
@@ -303,4 +302,3 @@ void main () {
     
     gl_FragColor = vec4(vec3(c), feedback);
 }
-`
