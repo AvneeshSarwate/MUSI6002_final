@@ -35,7 +35,7 @@ var videosReady = [false, false, false, false];
 var webcamSnapshotTexture;
 var takeSnapshot = true;
 
-var presetShaderCode;
+var defaultShaderCompiled = false;
 
 function createGlContext() {
     var gGLContext = null;
@@ -171,8 +171,8 @@ function createTarget(width, height) {
     return target;
 }
 
-function setShaderFromEditor() {
-    var result = newShader(vsDraw, editor.getValue());
+function setShaderFromEditor(shaderCode) {
+    var result = newShader(vsDraw, shaderCode ? shaderCode : editor.getValue());
     sendOSCMessages();
     return setShader(result, false);
 }
@@ -182,6 +182,11 @@ function newShader(vs, shaderCode) {
 
     if (res.mSuccess === false) {
         return res;
+    }
+
+    defaultShaderCompiled = shaderCode === defaultShader || defaultShaderCompiled;
+    if(defaultShaderCompiled){
+      console.log("SHADER LEN " + defaultShader.length);
     }
 
     if (typeof(Storage) !== "undefined") {
