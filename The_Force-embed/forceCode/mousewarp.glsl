@@ -389,7 +389,9 @@ void main () {
     int t = int(5.);
     vec3 col_ = mix(col, t1, mN.x);
     // vec3 t1_ = mix(t1, v3XOR(lum(col2), t1), indMap(mN.y, 2.));
-    t1 = vec3(hexTexAvg(stN, 30. + indMap(mN.y, 2.) * 200.));
+    float avgLum = hexTexAvg(stN, 30. + indMap(mN.y, 2.) * 200.);
+    avgLum = avgLum > 0.2 ? avgLum-0.3 + rand(vec2(time, quant(stN.y+time/10., 100.)))/1.5 : 0.;
+    t1 = vec3(avgLum);
     
     // col = v3XOR(col, t1);
     
