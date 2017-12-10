@@ -1,293 +1,818 @@
-vec2 cube_to_axial(vec3 cube){
-    float q = cube.x;
-    float r = cube.z;
-    return vec2(q, r);
-}
+var fbos = [null, null];
+var pingPong = 0;
+var mQuadVBO = null;
+var mQuadTVBO = null;
+var mProgram = null;
+var screenProgram = null;
+var mInputs = [null, null, null, null, null, null, null, null];
+var mInputsStr = "";
+var mOSCStr = "";
+var mMIDIStr = "";
+var vsScreen = null;
+var vsDraw = null;
+var elapsedBandPeaks = [0.0, 0.0, 0.0, 0.0];
+//unifoms
+var vertPosU, l2, l3, l4, l5, l6, l7, l8, ch0, ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8, bs, screenResU, screenTexU, screenBlendU, translateUniform, scaleUniform, rotateUniform, gammaU, bandsTimeU, midiU;
+var resos = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+resos = resos.concat(resos);
+var oscM = [null, null, null, null, null, null, null, null, null, null];
+var gammaValues = [1.0, 1.0, 1.0, 1.0];
 
-vec3 axial_to_cube(vec2 hex){
-    float x = hex.x;
-    float z = hex.y;
-    float y = -x-z;
-    return vec3(x, y, z);
-}
+var mHeader = null;
+var fsNew = "void main () {\n\tgl_FragColor = vec4(black, 1.0);\n}";
 
-float round(float v){
-    return floor(v+0.5);
-}
+var testingImage = false;
+var testTexture;
 
-vec3 cube_round(vec3 cube){
-    float rx = round(cube.x);
-    float ry = round(cube.y);
-    float rz = round(cube.z);
+var webcamTexture;
+var webcam;
+var wcTex;
 
-    float x_diff = abs(rx - cube.x);
-    float y_diff = abs(ry - cube.y);
-    float z_diff = abs(rz - cube.z);
+var videos = [null, null, null, null];
+var videoTextures = [null, null, null, null];
+var videosReady = [false, false, false, false];
 
-    if (x_diff > y_diff && x_diff > z_diff){
-        rx = -ry-rz;
+var webcamSnapshotTexture;
+var takeSnapshot = true;
+
+var presetShaderCode;
+
+function createGlContext() {
+    var gGLContext = null;
+    var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+    for (var i = 0; i < names.length; i++) {
+        try {
+            gGLContext = mCanvas.getContext(names[i], {
+                alpha: false,
+                depth: false,
+                antialias: false,
+                stencil: false,
+                premultipliedAlpha: false,
+                preserveDrawingBuffer: true
+            });
+        } catch (e) {
+            gGLContext = null;
+        }
+        if (gGLContext)
+            break;
     }
-    else if (y_diff > z_diff) {
-        ry = -rx-rz;
-    } else{
-        rz = -rx-ry;
+
+    if (gGLContext === null) {
+        mIsPaused = true;
+        console.log("no GL");
     }
 
-    return vec3(rx, ry, rz);
+    gl = gGLContext;
+    resizeGLCanvas(window.innerWidth, window.innerHeight);
+
+    //because I want to load shaders as files. :/
+    $.when($.ajax({ url: "shaders/draw.vert", dataType: "text" }),
+        $.ajax({ url: "shaders/screen.vert", dataType: "text" }),
+        $.ajax({ url: "shaders/screen.frag", dataType: "text" }),
+        $.ajax({ url: "shaders/header.frag", dataType: "text" })).done(function(d, v, f, h) {
+
+        //build screen shader
+        var res = createShader(v[0], f[0]);
+
+        if (res.mSuccess === false) {
+            console.log(res.mInfo);
+            alert("error");
+        }
+
+        if (screenProgram !== null)
+            gl.deleteProgram(screenProgram);
+
+        screenProgram = res.mProgram;
+
+        gl.useProgram(screenProgram);
+        vertPosU = gl.getAttribLocation(screenProgram, "position");
+        texLocationAttribute = gl.getAttribLocation(screenProgram, "a_texCoord");
+        screenResU = gl.getUniformLocation(screenProgram, "resolution");
+        screenTexU = gl.getUniformLocation(screenProgram, "texture");
+        screenBlendU = gl.getUniformLocation(screenProgram, "edgeBlend");
+        translateUniform = gl.getUniformLocation(screenProgram, "translation");
+        scaleUniform = gl.getUniformLocation(screenProgram, "u_scale");
+        rotateUniform = gl.getUniformLocation(screenProgram, "u_degrees");
+        gammaU = gl.getUniformLocation(screenProgram, "colorCurves");
+        //vertex data
+        mQuadVBO = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, mQuadVBO);
+        gl.bufferData(gl.ARRAY_BUFFER,
+            new Float32Array([-1.0, -1.0,
+                1.0, -1.0, -1.0, 1.0,
+                1.0, 1.0
+            ]),
+            gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(vertPosU);
+        gl.vertexAttribPointer(vertPosU, 2, gl.FLOAT, false, 0, 0);
+
+        mQuadTVBO = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, mQuadTVBO);
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array([
+                0.0, 0.0,
+                1.0, 0.0,
+                0.0, 1.0,
+                1.0, 1.0
+            ]),
+            gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(texLocationAttribute);
+        gl.vertexAttribPointer(texLocationAttribute, 2, gl.FLOAT, false, 0, 0);
+
+
+        vsScreen = v[0];
+        mHeader = h[0];
+        vsDraw = d[0];
+        var res = newShader(vsDraw, fsNew);
+        if (res.mSuccess === false) {
+            console.log(res.mInfo);
+            alert("error");
+        }
+    }); //end $.when
+
+    testTexture = gl.createTexture();
+    testImage = new Image();
+    testImage.onload = function() { handleTextureLoaded(testImage, testTexture); }
+    testImage.src = "images/test.jpg";
 }
 
-vec2 hex_round(vec2 hex){
-    return cube_to_axial(cube_round(axial_to_cube(hex))); 
+
+function createTarget(width, height) {
+    var target = {};
+
+
+    if (target.framebuffer && gl.isFramebuffer(target.framebuffer))
+        gl.deleteFramebuffer(target.framebuffer);
+
+    if (target.texture && gl.isTexture(target.texture))
+        gl.deleteTexture(target.texture);
+
+    target.framebuffer = gl.createFramebuffer();
+    target.texture = gl.createTexture();
+
+    // set up framebuffer
+    gl.bindTexture(gl.TEXTURE_2D, target.texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, target.framebuffer);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target.texture, 0);
+
+    // clean up
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    return target;
 }
 
-vec2 cube_to_oddr(vec3 cube){
-      float col = cube.x + (cube.z - mod(cube.z,2.)) / 2.;
-      float row = cube.z;
-      return vec2(col, row);
+function setShaderFromEditor() {
+    var result = newShader(vsDraw, editor.getValue());
+    sendOSCMessages();
+    return setShader(result, false);
 }
 
-vec3 oddr_to_cube(vec2 hex){
-      float x = hex.x - (hex.x - mod(hex.x,2.)) / 2.;
-      float z = hex.y;
-      float y = -x-z;
-      return vec3(x, y, z);
-}
+function newShader(vs, shaderCode) {
+    var res = createShader(vs, mHeader + mInputsStr + mOSCStr + mMIDIStr + shaderCode); //, true);
 
-vec2 hex_to_pixel(vec2 hex, float size){
-    float x = size * sqrt(3.) * (hex.x + hex.y/2.);
-    float y = size * 3./2. * hex.y;
-    return vec2(x, y);
-}
+    if (res.mSuccess === false) {
+        return res;
+    }
 
-vec2 pixel_to_hex(vec2 p, float size){
-    float x = p.x;
-    float y = p.y;
-    float q = (x * sqrt(3.)/3. - y / 3.) / size;
-    float r = y * 2./3. / size;
-    return vec2(q, r);
-}
+    if (typeof(Storage) !== "undefined") {
+        localStorage.lastValidCode = shaderCode;
+    }
 
-vec2 hexCenter2(vec2 p, float size){
-    return hex_to_pixel(hex_round(pixel_to_hex(p, size)), size);
-}
 
-bool inSampleSet(vec2 p, vec2 center){
-    float size = 1.;
-    bool contained = false;
-    for(float i = 0.; i < 6.; i++){
-        float rad = i * PI / 3.;
-        vec2 corner = rotate(vec2(center.x+size, center.y), center, rad);
-        for(float j = 0.; j < 3.; j++){
-            vec2 samp = mix(center, corner, (0.2*(j+1.)));
-            contained = contained || distance(p, samp) < 0.05;
+    if (mProgram !== null)
+        gl.deleteProgram(mProgram);
+
+    mProgram = res.mProgram;
+
+    // vertPosU =  gl.getUniformLocation(mProgram, "position");
+    l2 = gl.getUniformLocation(mProgram, "time");
+    l3 = gl.getUniformLocation(mProgram, "resolution");
+    l4 = gl.getUniformLocation(mProgram, "mouse");
+    l5 = gl.getUniformLocation(mProgram, "channelTime");
+    l7 = gl.getUniformLocation(mProgram, "date");
+    l8 = gl.getUniformLocation(mProgram, "channelResolution");
+
+    ch0 = gl.getUniformLocation(mProgram, "channel0");
+    ch1 = gl.getUniformLocation(mProgram, "channel1");
+    ch2 = gl.getUniformLocation(mProgram, "channel2");
+    ch3 = gl.getUniformLocation(mProgram, "channel3");
+    ch4 = gl.getUniformLocation(mProgram, "backbuffer");
+    //TODO cam-background - add something here (why?)
+    ch5 = gl.getUniformLocation(mProgram, "channel5");
+    ch6 = gl.getUniformLocation(mProgram, "channel6");
+    ch7 = gl.getUniformLocation(mProgram, "channel7");
+    ch8 = gl.getUniformLocation(mProgram, "channel8");
+
+    bs = gl.getUniformLocation(mProgram, "bands");
+    bandsTimeU = gl.getUniformLocation(mProgram, "bandsTime");
+
+    //OSC uniforms
+    for (var i = 0; i < oscM.length; i++) {
+        if (oscM[i] !== null) {
+            oscM[i].uniLoc = gl.getUniformLocation(mProgram, oscM[i].uniName);
         }
     }
-    return contained;
+
+    //MIDI uniform
+    if (midi !== null) {
+        midiU = gl.getUniformLocation(mProgram, "midi");
+    }
+
+    return res; //means success
 }
 
-vec3 lum(vec3 color){
-    vec3 weights = vec3(0.212, 0.7152, 0.0722);
-    return vec3(dot(color, weights));
+function createShader(vertShader, fragShader) {
+    if (gl === null) return;
+
+    var tmpProgram = gl.createProgram();
+
+    var vs = gl.createShader(gl.VERTEX_SHADER);
+    var fs = gl.createShader(gl.FRAGMENT_SHADER);
+
+    gl.shaderSource(vs, vertShader);
+    gl.shaderSource(fs, fragShader);
+
+    gl.compileShader(vs);
+    gl.compileShader(fs);
+
+    if (!gl.getShaderParameter(vs, gl.COMPILE_STATUS)) {
+        var infoLog = gl.getShaderInfoLog(vs);
+        gl.deleteProgram(tmpProgram);
+        return {
+            mSuccess: false,
+            mInfo: infoLog
+        };
+    }
+
+    if (!gl.getShaderParameter(fs, gl.COMPILE_STATUS)) {
+        var infoLog = gl.getShaderInfoLog(fs);
+        gl.deleteProgram(tmpProgram);
+        return {
+            mSuccess: false,
+            mInfo: infoLog
+        };
+    }
+
+    gl.attachShader(tmpProgram, vs);
+    gl.attachShader(tmpProgram, fs);
+
+    gl.deleteShader(vs);
+    gl.deleteShader(fs);
+
+    gl.linkProgram(tmpProgram);
+
+    if (!gl.getProgramParameter(tmpProgram, gl.LINK_STATUS)) {
+        var infoLog = gl.getProgramInfoLog(tmpProgram);
+        gl.deleteProgram(tmpProgram);
+        return {
+            mSuccess: false,
+            mInfo: infoLog
+        };
+    }
+
+    return {
+        mSuccess: true,
+        mProgram: tmpProgram
+    }
 }
 
-//float scaleval = 110.;
+function destroyInput(id) {
+    if (mInputs[id] === null) return;
+    if (gl === null) return;
 
-float hexLumAvg(vec2 p, float numHex){
-    vec2 p2 = p * numHex;
-    vec2 center = hexCenter2(p2, 1.);
-    bool contained = false;
-    float avgLum = 0.;
-    for(float i = 0.; i < 6.; i++){
-        float rad = i * PI / 3.;
-        vec2 corner = rotate(vec2(center.x+1., center.y), center, rad);
-        for(float j = 0.; j < 3.; j++){
-            vec2 samp = mix(center, corner, (0.2*(j+1.))) / numHex;
-            vec3 cam = texture2D(channel0, vec2(1.-samp.x, samp.y)).xyz;
-            avgLum += lum(cam).x;
+    var inp = mInputs[id];
+
+    if (inp.type == "texture") {
+        gl.deleteTexture(inp.globject);
+    } else if (inp.type == "slideshow") {
+        gl.deleteTexture(inp.globject);
+    } else if (inp.type == "webcam") {
+        gl.deleteTexture(inp.globject);
+    } else if (inp.type == "video") { //TODO AVN: make sure this is handled correctly for this/webcam
+        inp.video.pause();
+        inp.video = null;
+        gl.deleteTexture(inp.globject);
+    } else if (inp.type == "music") {
+        inp.audio.pause();
+        inp.audio = null;
+        gl.deleteTexture(inp.globject);
+    } else if (inp.type == "cubemap") {
+        gl.deleteTexture(inp.globject);
+    } else if (inp.type == "tex_keyboard") {
+        gl.deleteTexture(inp.globject);
+    }
+
+    mInputs[id] = null;
+}
+
+function createInputStr() {
+    mInputsStr = "";
+    for (var i = 0; i < mInputs.length; i++) {
+        var inp = mInputs[i];
+
+        if (inp !== null && inp.type == "cubemap")
+            mInputsStr += "uniform samplerCube channel" + i + ";\n";
+        else
+            mInputsStr += "uniform sampler2D channel" + i + ";\n";
+    }
+    //TODO cam-background - declare uniform for background here
+}
+
+function createOSCUniforms() {
+    mOSCStr = "";
+    for (var i = 0; i < oscM.length; i++) {
+        var inp = oscM[i];
+
+        if (inp !== null) {
+            // mOSCStr += "uniform vec4 " + $('#inOSCUniform'+i).val() + ";\n";
+            // mOSCStr += "uniform vec4 " + oscM[i].uniName + ";\n";
+            mOSCStr += "uniform vec4 " + inp.uniName + ";";
+            // mOSCStr = "uniform vec4 analogInput;";
         }
     }
-    return avgLum / 18.;
 }
 
-float colourDistance(vec3 e1, vec3 e2) {
-  float rmean = (e1.r + e2.r ) / 2.;
-  float r = e1.r - e2.r;
-  float g = e1.g - e2.g;
-  float b = e1.b - e2.b;
-  return sqrt((((512.+rmean)*r*r)/256.) + 4.*g*g + (((767.-rmean)*b*b)/256.));
+function createMIDIUniforms() {
+    mMIDIStr = "";
+    if (midiIn !== null) {
+        mMIDIStr = "uniform int midi[128];";
+    }
+
 }
 
-float hexDiffAvg(vec2 p, float numHex){
-    vec2 p2 = p * numHex;
-    vec2 center = hexCenter2(p2, 1.);
-    bool contained = false;
-    float diff = 0.;
-    for(float i = 0.; i < 6.; i++){
-        float rad = i * PI / 3.;
-        vec2 corner = rotate(vec2(center.x+1., center.y), center, rad);
-        for(float j = 0.; j < 3.; j++){
-            vec2 samp = mix(center, corner, (0.2*(j+1.))) / numHex;
-            vec3 cam = texture2D(channel0, vec2(1.-samp.x, samp.y)).xyz;
-            vec3 snap = texture2D(channel3, vec2(1.-samp.x, samp.y)).xyz;
-            diff += colourDistance(cam, snap);
+function getHeaderSize() {
+    var n = (mHeader + mInputsStr + mOSCStr + mMIDIStr).split(/\r\n|\r|\n/).length;
+    return n;
+}
+
+
+function setupVideo(url, ind) {
+  const video = document.createElement('video');
+
+  var playing = false;
+  var timeupdate = false;
+
+  video.autoplay = true;
+  video.muted = true;
+  video.loop = true;
+
+  // Waiting for these 2 events ensures
+  // there is data in the video
+
+  video.addEventListener('playing', function() {
+     playing = true;
+     checkReady();
+  }, true);
+
+  video.addEventListener('timeupdate', function() {
+     timeupdate = true;
+     checkReady();
+  }, true);
+
+  video.src = url;
+  video.play();
+
+  function checkReady() {
+    if (playing && timeupdate) {
+      videosReady[ind] = true;
+    }
+  }
+
+  return video;
+}
+
+// will set to true when video can be copied to texture
+var webcamReady = false;
+
+function setupWebcam() {
+  const video = document.createElement('video');
+
+
+  var hasUserMedia = navigator.webkitGetUserMedia ? true : false;
+
+  var playing = false;
+  var timeupdate = false;
+
+  video.autoplay = true;
+  video.muted = true;
+  video.loop = true;
+
+  // Waiting for these 2 events ensures
+  // there is data in the video
+
+  video.addEventListener('playing', function() {
+     playing = true;
+     checkReady();
+  }, true);
+
+  video.addEventListener('timeupdate', function() {
+     timeupdate = true;
+     checkReady();
+  }, true);
+
+  var constraints = {video: { width: 1280, height: 720 } }; 
+
+  navigator.mediaDevices.getUserMedia(constraints)
+  .then(function(mediaStream) {
+    video.srcObject = mediaStream;
+    video.onloadedmetadata = function(e) {
+      video.play();
+    };
+  })
+  .catch(function(err) { console.log(err.name + ": " + err.message); }); // always check for errors at the end.
+
+  function checkReady() {
+    if (playing && timeupdate) {
+      webcamReady = true;
+    }
+  }
+
+  return video;
+}
+
+
+function initVideoTexture(gl, url) {
+  const texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  // Because video has to be download over the internet
+  // they might take a moment until it's ready so
+  // put a single pixel in the texture so we can
+  // use it immediately.
+  const level = 0;
+  const internalFormat = gl.RGBA;
+  const width = 1;
+  const height = 1;
+  const border = 0;
+  const srcFormat = gl.RGBA;
+  const srcType = gl.UNSIGNED_BYTE;
+  const pixel = new Uint8Array([0, 0, 255, 255]);  // opaque blue
+  gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                width, height, border, srcFormat, srcType,
+                pixel);
+
+  // Turn off mips and set  wrapping to clamp to edge so it
+  // will work regardless of the dimensions of the video.
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+  return texture;
+}
+
+function createNewVideoTexture(gl, url, ind){
+    var textureObj = initVideoTexture(gl, url);
+    var video = setupVideo(url, ind);
+    texture = {};
+    texture.globject = textureObj;
+    texture.type = "tex_2D";
+    texture.image = {height: video.height, video: video.width};
+    texture.loaded = true; //this is ok to do because the update loop checks videosReady[]
+    videos[ind] = video;
+    videoTextures[ind] = texture;
+}
+
+function updateVideoTexture(gl, texture, video) {
+  const level = 0;
+  const internalFormat = gl.RGBA;
+  const srcFormat = gl.RGBA;
+  const srcType = gl.UNSIGNED_BYTE;
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                srcFormat, srcType, video);
+}
+
+function handleTextureLoaded(image, texture) {
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+}
+
+function createGLTexture(ctx, image, format, texture) {
+    if (ctx === null) return;
+
+    ctx.bindTexture(ctx.TEXTURE_2D, texture);
+    ctx.pixelStorei(ctx.UNPACK_FLIP_Y_WEBGL, false);
+    ctx.texImage2D(ctx.TEXTURE_2D, 0, format, ctx.RGBA, ctx.UNSIGNED_BYTE, image);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MAG_FILTER, ctx.LINEAR);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MIN_FILTER, ctx.LINEAR_MIPMAP_LINEAR);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_S, ctx.REPEAT);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_T, ctx.REPEAT);
+    ctx.generateMipmap(ctx.TEXTURE_2D);
+    ctx.bindTexture(ctx.TEXTURE_2D, null);
+}
+
+function createGLTextureLinear(ctx, image, texture) {
+    if (ctx === null) return;
+
+    ctx.bindTexture(ctx.TEXTURE_2D, texture);
+    ctx.pixelStorei(ctx.UNPACK_FLIP_Y_WEBGL, false);
+    ctx.texImage2D(ctx.TEXTURE_2D, 0, ctx.RGBA, ctx.RGBA, ctx.UNSIGNED_BYTE, image);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MAG_FILTER, ctx.LINEAR);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MIN_FILTER, ctx.LINEAR);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_S, ctx.CLAMP_TO_EDGE);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_T, ctx.CLAMP_TO_EDGE);
+    ctx.bindTexture(ctx.TEXTURE_2D, null);
+}
+
+
+function createGLTextureNearestRepeat(ctx, image, texture) {
+    if (ctx === null) return;
+
+    ctx.bindTexture(ctx.TEXTURE_2D, texture);
+    ctx.pixelStorei(ctx.UNPACK_FLIP_Y_WEBGL, false);
+    ctx.texImage2D(ctx.TEXTURE_2D, 0, ctx.RGBA, ctx.RGBA, ctx.UNSIGNED_BYTE, image);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MAG_FILTER, ctx.NEAREST);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MIN_FILTER, ctx.NEAREST);
+    ctx.bindTexture(ctx.TEXTURE_2D, null);
+}
+
+function createGLTextureNearest(ctx, image, texture) {
+    if (ctx === null) return;
+
+    ctx.bindTexture(ctx.TEXTURE_2D, texture);
+    ctx.pixelStorei(ctx.UNPACK_FLIP_Y_WEBGL, true);
+    ctx.texImage2D(ctx.TEXTURE_2D, 0, ctx.RGBA, ctx.RGBA, ctx.UNSIGNED_BYTE, image);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MAG_FILTER, ctx.NEAREST);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MIN_FILTER, ctx.NEAREST);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_S, ctx.CLAMP_TO_EDGE);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_T, ctx.CLAMP_TO_EDGE);
+    ctx.bindTexture(ctx.TEXTURE_2D, null);
+}
+
+function createAudioTexture(ctx, texture) {
+    if (ctx === null) return;
+
+    ctx.bindTexture(ctx.TEXTURE_2D, texture);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MAG_FILTER, ctx.NEAREST);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MIN_FILTER, ctx.NEAREST);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_S, ctx.CLAMP_TO_EDGE);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_T, ctx.CLAMP_TO_EDGE);
+    ctx.texImage2D(ctx.TEXTURE_2D, 0, ctx.LUMINANCE, 512, 2, 0, ctx.LUMINANCE, ctx.UNSIGNED_BYTE, null);
+    ctx.bindTexture(ctx.TEXTURE_2D, null);
+}
+
+function createKeyboardTexture(ctx, texture) {
+    if (ctx === null) return;
+
+    ctx.bindTexture(ctx.TEXTURE_2D, texture);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MAG_FILTER, ctx.NEAREST);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MIN_FILTER, ctx.NEAREST);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_S, ctx.CLAMP_TO_EDGE);
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_T, ctx.CLAMP_TO_EDGE);
+    ctx.texImage2D(ctx.TEXTURE_2D, 0, ctx.LUMINANCE, 256, 2, 0, ctx.LUMINANCE, ctx.UNSIGNED_BYTE, null);
+    ctx.bindTexture(ctx.TEXTURE_2D, null);
+}
+
+function resizeGLCanvas(width, height) {
+    mCanvas.width = width / quality;
+    mCanvas.height = height / quality;
+
+    mCanvas.style.width = width + 'px';
+    mCanvas.style.height = height + 'px';
+
+    gl.viewport(0, 0, mCanvas.width, mCanvas.height);
+
+    fbos[0] = createTarget(mCanvas.width, mCanvas.height);
+    fbos[1] = createTarget(mCanvas.width, mCanvas.height);
+}
+
+function updateKeyboardDown(event) {
+    for (var i = 0; i < mInputs.length; i++) {
+        var inp = mInputs[i];
+        if (inp !== null && inp.type == "tex_keyboard") {
+            inp.mData[event] = 255;
         }
     }
-    return diff / 18.;
 }
 
-float sinN(float t){
-   return (sin(t) + 1.) / 1.; 
-}
-
-float cosN(float t){
-   return (cos(t) + 1.) / 1.; 
-}
-
-vec3 diffColor(float time2, vec2 stN){
-    stN = rotate(vec2(0.5+sin(time2)*0.5, 0.5+cos(time2)*0.5), stN, sin(time2));
-    
-    vec2 segGrid = vec2(floor(stN.x*30.0 * sin(time2/7.)), floor(stN.y*30.0 * sin(time2/7.)));
-
-    vec2 xy;
-    float noiseVal = rand(stN)*sin(time2/7.) * 0.15;
-    if(mod(segGrid.x, 2.) == mod(segGrid.y, 2.)) xy = rotate(vec2(sinN(time2), cosN(time2)), stN.xy, time2 + noiseVal);
-    else xy = rotate(vec2(sinN(time2), cosN(time2)), stN.xy, - time2 - noiseVal);
-    
-    float section = floor(xy.x*30.0 * sin(time2/7.)); 
-    float tile = mod(section, 2.);
-
-    float section2 = floor(xy.y*30.0 * cos(time2/7.)); 
-    float tile2 = mod(section2, 2.);
-    float timeMod = time2 - (1. * floor(time2/1.)); 
-    
-    return vec3(tile, tile2, timeMod);
-}
-
-vec3 quant(vec3 num, float quantLevels){
-    vec3 roundPart = floor(fract(num*quantLevels)*2.);
-    return (floor(num*quantLevels)+roundPart)/quantLevels;
-}
-
-float quant(float num, float quantLevels){
-    float roundPart = floor(fract(num*quantLevels)*2.);
-    return (floor(num*quantLevels)+roundPart)/quantLevels;
-}
-
-
-float wrap(float val, float low, float high){
-    if(val < low) return low + (low-val);
-    if(val > high) return high - (val - high);
-    return val;
-}
-
-float bound(float val, float lower, float upper){
-    return max(lower, min(upper, val));
-}
-
-bool boxHasColorDiff(vec2 xy, float boxSize, float diffThresh, float diffFrac){
-    float boxArea = boxSize * boxSize;
-    return true;
-}
-
-float block(float numBlocks, float quantLevel) {
-    vec2 stN = uvN();
-    vec3 cam = texture2D(channel0, vec2(1.-stN.x, stN.y)).xyz; 
-    vec3 lumC = lum(cam);
-    vec2 res = gl_FragCoord.xy / stN;
-    vec2 blockSize = res.xy / numBlocks;
-    vec2 blockStart = floor(gl_FragCoord.xy / blockSize) * blockSize / res.xy;
-    float blockAvgLuma = 0.;
-    vec2 counter = blockStart;
-    
-    vec2 inc = vec2(1. / (numBlocks *100.));
-    for(float i = 0.; i < 10.; i += 1.){
-        for(float j = 0.; j < 10.; j += 1.){
-            blockAvgLuma += lum(texture2D(channel0, vec2(1.-counter.x, counter.y)).xyz).r;
-            counter += inc;
+function updateKeyboardUp(event) {
+    for (var i = 0; i < mInputs.length; i++) {
+        var inp = mInputs[i];
+        if (inp !== null && inp.type == "tex_keyboard") {
+            inp.mData[event] = 0;
         }
     }
-    blockAvgLuma /= 100.;
-    
-    return quant(blockAvgLuma, quantLevel);
 }
 
-//val assumed between 0 - 1
-float scale(float val, float minv, float maxv){
-    float range = maxv - minv;
-    return minv + val*range;
-}
+var d = null, dates = null;
 
-float indMap(float val, float ind){
-    return cosN(val * PI * pow(2., ind));
-}
+function paint() {
+    if (gl === null) return;
+    if (mProgram === null) return;
 
-float twinGeo(float v, float range){
-    if(v > 0.5) return (v-0.5) * 2. * range;
-    if(v < 0.5) return 1. / (abs(v-0.5) * 2. * range);
-    return 1.;
-}
+    gl.useProgram(mProgram);
 
-void main () {
-    vec2 stN = uvN();
-     vec2 camPos = vec2(stN.x, stN.y);
+    var d = new Date();
+    var dates = [
+        d.getFullYear(), // the year (four digits)
+        d.getMonth(), // the month (from 0-11)
+        d.getDate(), // the day of the month (from 1-31)
+        d.getHours() * 60.0 * 60 + d.getMinutes() * 60 + d.getSeconds()
+    ];
 
-    vec4 mN = mouse / resolution.xyxy /2.;
-    
-    bool useVarying = false; mN.z < 0.5;
+    //init dimensions
+    resos = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    resos = resos.concat(resos);
 
-    float decay = useVarying ? 0.795 + clamp(indMap(mN.x, 0.)*1.1, 0., 1.)*0.2 : 0.98;
-    float blockColor = useVarying ? block(20.+ indMap(mN.x, 1.) * 70., 2.+ indMap(mN.y, 0.) *15.) + 0.01 : block(50.+ sinN(time/2.) * 40., 7.+sinN(time/1.5)*10.) + 0.01;
-    float lumBlend = useVarying ? pow(2., scale(indMap(mN.y, 1.), -2., 4.)) : 0.25;
-    float numHex = useVarying ? 30. + indMap(mN.x, 2.) * 90. : 90.;
-    float shadowSpeed = useVarying ? twinGeo(indMap(mN.y, 2.), 5.): 1./5.;
-    float backZoom = 1.;
-    float shadowZoom = 1.;
-    
-    vec2 cent = useVarying ? vec2(sinN(time * sin(time/2000.)) / 2. + 0.2, cosN(sin((1. + (1.-mN.y) * 5.) * time/2000.)) / 2.) : vec2(0.5);
-    vec2 z = useVarying ? vec2(stN.x * mN.x + (1. - mN.x)*cent.x, stN.y * mN.y + (1. - mN.y)*cent.y) : stN;
-    
-    vec2 centCam = useVarying && false ? vec2((1. - sinN(time * sin(time/2000.))) / 2. + 0.2, cosN(time * sin(time/2000.)) / 2.) : vec2(0.5);
-    vec2 mouseMap = useVarying ? vec2(scale(indMap(mN.x, 3.), 0.5, 1.3), scale(indMap(mN.y, 3.), 0.5, 1.3)) : mN.xy; //TODO - allow this > 1?
-    vec2 zcam = useVarying ? vec2(stN.x * mouseMap.x + (1. -  mouseMap.x)*(centCam.x), stN.y *  mouseMap.y + (1. -  mouseMap.y)*centCam.y) : camPos;
-    
-    vec3 snap = texture2D(channel3, zcam).rgb;  
-    vec3 cam = texture2D(channel0, zcam).rgb;  
-    vec3 bb = texture2D(backbuffer, vec2(stN.x, stN.y)).rgb;
-    vec3 t1 = texture2D(channel1, stN).rgb;
-    
-    vec3 c;
-    float lastFeedback = texture2D(backbuffer, vec2(stN.x, stN.y)).a; 
-    float feedback;
-    
-    vec3 col = diffColor(time * shadowSpeed, stN);
-    float hexDiff = hexDiffAvg(zcam, numHex);
-    float pointDiff = colourDistance(cam, snap);
-    
-    // CHeck Swaps of layers 
-    vec3 col_ = mix(col, t1, mN.x);
-    vec3 t1_ = mix(col, t1, mN.y);
-    col = col_;
-    t1 - t1_;
-    
-    if(hexDiff > 0.8){
-        if(lastFeedback < 1.) {
-            feedback = 1.;
-            c = col * pow(blockColor, lumBlend);
-        } else {
-            feedback = lastFeedback * decay;
-            c = mix(snap, bb, lastFeedback);
+    //add uniform stuff
+    if (l2 !== null) gl.uniform1f(l2, (Date.now() - mTime) * 0.001);
+    if (l3 !== null) gl.uniform2f(l3, mCanvas.width, mCanvas.height);
+    if (l4 !== null) gl.uniform4f(l4, mMousePosX, mMousePosY, mMouseClickX, mMouseClickY);
+    if (l7 !== null) gl.uniform4f(l7, d.getFullYear(), d.getMonth(), d.getDate(),
+        d.getHours() * 60 * 60 + d.getMinutes() * 60 + d.getSeconds());
+
+    if (ch0 !== null) gl.uniform1i(ch0, 0);
+    if (ch1 !== null) gl.uniform1i(ch1, 1);
+    if (ch2 !== null) gl.uniform1i(ch2, 2);
+    if (ch3 !== null) gl.uniform1i(ch3, 3);
+    if (ch4 !== null) gl.uniform1i(ch4, 4); //backbuffer
+    if (ch5 !== null) gl.uniform1i(ch5, 5);
+    if (ch6 !== null) gl.uniform1i(ch6, 6);
+    if (ch7 !== null) gl.uniform1i(ch7, 7);
+    if (ch8 !== null) gl.uniform1i(ch8, 8);
+    //TODO cam-background - add something here (why?) (setting gl.TEXTURE[i] value?)
+
+    // gl.bindBuffer( gl.ARRAY_BUFFER, mQuadVBO);
+    // gl.vertexAttribPointer(vertPosU, 2,  gl.FLOAT, false, 0, 0);
+
+    //minputs
+    //fourband sound
+    if (mSound && bandsOn && mAudioContext !== null) {
+        if (bs !== null) {
+
+            gl.uniform4f(bs, mSound.low, mSound.mid, mSound.upper, mSound.high);
+        }
+        if (bandsTimeU !== null) { //this is for per fft band time elapsed events
+            if (mSound.low > .7)
+                elapsedBandPeaks[0] = 0.0;
+            else
+                elapsedBandPeaks[0] += meter.duration * .001;
+
+            if (mSound.mid > .7)
+                elapsedBandPeaks[1] = 0.0;
+            else
+                elapsedBandPeaks[1] += meter.duration * .001;
+
+            if (mSound.upper > .7)
+                elapsedBandPeaks[2] = 0.0;
+            else
+                elapsedBandPeaks[2] += meter.duration * .001;
+
+            if (mSound.high > .7)
+                elapsedBandPeaks[3] = 0.0;
+            else
+                elapsedBandPeaks[3] += meter.duration * .001;
+
+            gl.uniform4f(bandsTimeU, elapsedBandPeaks[0], elapsedBandPeaks[1], elapsedBandPeaks[2], elapsedBandPeaks[4]);
+        }
+        // }
+    }
+
+    for (var i = 0; i < mInputs.length; i++) {
+        var inp = mInputs[i];
+
+
+        gl.activeTexture(gl.TEXTURE0 + i);
+
+        if (inp === null) {
+            gl.bindTexture(gl.TEXTURE_2D, null);
+        } else if (inp.type == "tex_2D") {
+            if (inp.loaded === false)
+                gl.bindTexture(gl.TEXTURE_2D, null);
+            else {
+                gl.bindTexture(gl.TEXTURE_2D, inp.globject);
+                resos[3 * i + 0] = inp.image.width;
+                resos[3 * i + 1] = inp.image.height;
+                resos[3 * i + 2] = 1;
+            }
+        } else if (inp.type == "tex_audio") {
+            mSound.mAnalyser.getByteTimeDomainData(mSound.mWaveData);
+            mSound.mAnalyser.getByteFrequencyData(mSound.mFreqData);
+            gl.bindTexture(gl.TEXTURE_2D, inp.globject);
+            var waveLen = Math.min(mSound.mWaveData.length, 512);
+            gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, waveLen, 1, gl.LUMINANCE, gl.UNSIGNED_BYTE, mSound.mWaveData);
+            gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 1, 512, 1, gl.LUMINANCE, gl.UNSIGNED_BYTE, mSound.mFreqData);
+        } else if (inp.type == "tex_keyboard") {
+            // if (inp.loaded === false)
+            //     gl.bindTexture(gl.TEXTURE_2D, null);
+            // else {
+            gl.bindTexture(gl.TEXTURE_2D, inp.globject);
+
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+            gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 256, 2, gl.LUMINANCE, gl.UNSIGNED_BYTE, inp.mData);
+            // }
         }
     }
-    else {
-        feedback = lastFeedback * decay;
-        if(lastFeedback > 0.5) { //if you put this below 1 you might have never-fading shadows 
-            c = mix(t1, col * pow(blockColor, lumBlend), lastFeedback); //swap col for bb for glitchier effect
-        } else {
-            feedback = 0.;
-            c = t1;
-            //c = vec3(0.);
+
+    // OSC values
+    for (var i = 0; i < oscM.length; i++) {
+        if (oscM[i] !== null) {
+            gl.uniform4fv(oscM[i].uniLoc, oscM[i].args);
         }
     }
-    
-    gl_FragColor = vec4(vec3(c), feedback);
+
+    //MIDI values
+    if (midi !== null) {
+        gl.uniform1iv(midiU, midiData);
+    }
+
+    // if (l5 !== null)  gl.uniform1fv(l5, times);
+    if (l8 !== null) gl.uniform3fv(l8, resos);
+
+    gl.activeTexture(gl.TEXTURE4); //backbuffer as texture
+    gl.bindTexture(gl.TEXTURE_2D, fbos[pingPong].texture);
+
+    pingPong = (pingPong + 1) % 2;
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbos[pingPong].framebuffer);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    //draw to screen
+    if (numScreens == 1) {
+        // gl.blendFunc(gl.ONE, gl.ONE);
+        gl.disable(gl.BLEND);
+        gl.useProgram(screenProgram);
+        gl.uniform2f(screenResU, mCanvas.width, mCanvas.height);
+        gl.uniform1i(screenTexU, 0);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, fbos[pingPong].texture);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        //center
+        gl.uniform2f(translateUniform, $("#point1X").val(), $("#point1Y").val());
+        gl.uniform2f(scaleUniform, $("#scale1X").val(), $("#scale1Y").val());
+        gl.uniform1f(rotateUniform, $("#rotate1").val());
+        gl.uniform4f(screenBlendU, 0.0, .001, 1.0, .001);
+        // $("#blend2X").val(), $("#blend2Y").val(),
+        // $("#blend2Z").val(), $("#blend2W").val());
+        gl.uniform4fv(gammaU, gammaValues);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    } else if (numScreens == 3) {
+        gl.blendFunc(gl.ONE, gl.ONE);
+        gl.enable(gl.BLEND);
+
+        gl.enableVertexAttribArray(texLocationAttribute);
+
+        gl.useProgram(screenProgram);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, mQuadVBO);
+        gl.vertexAttribPointer(vertPosU, 2, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, mQuadTVBO);
+        gl.vertexAttribPointer(texLocationAttribute, 2, gl.FLOAT, false, 0, 0);
+
+
+        gl.uniform2f(screenResU, mCanvas.width, mCanvas.height);
+        gl.uniform1i(screenTexU, 0);
+        gl.activeTexture(gl.TEXTURE0);
+
+        if (testingImage)
+            gl.bindTexture(gl.TEXTURE_2D, testTexture);
+        else
+            gl.bindTexture(gl.TEXTURE_2D, fbos[pingPong].texture);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        // left
+        gl.uniform2f(translateUniform, $("#point1X").val(), $("#point1Y").val());
+        gl.uniform2f(scaleUniform, $("#scale1X").val(), $("#scale1Y").val());
+        gl.uniform4f(screenBlendU, $("#blend1X").val(), $("#blend1Y").val(),
+            $("#blend1Z").val(), $("#blend1W").val());
+        gl.uniform1f(rotateUniform, $("#rotate1").val());
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+        // right
+        gl.uniform2f(translateUniform, $("#point3X").val(), $("#point3Y").val());
+        gl.uniform2f(scaleUniform, $("#scale3X").val(), $("#scale3Y").val());
+        gl.uniform4f(screenBlendU, $("#blend3X").val(), $("#blend3Y").val(),
+            $("#blend3Z").val(), $("#blend3W").val());
+        gl.uniform1f(rotateUniform, $("#rotate3").val());
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+
+        //center
+        gl.uniform2f(translateUniform, $("#point2X").val(), $("#point2Y").val());
+        gl.uniform2f(scaleUniform, $("#scale2X").val(), $("#scale2Y").val());
+        gl.uniform4f(screenBlendU, $("#blend2X").val(), $("#blend2Y").val(),
+            $("#blend2Z").val(), $("#blend2W").val());
+        gl.uniform1f(rotateUniform, $("#rotate2").val());
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
 }

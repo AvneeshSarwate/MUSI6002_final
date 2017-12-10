@@ -1,3 +1,98 @@
+// bitwise stuff from here https://gist.github.com/EliCDavis/f35a9e4afb8e1c9ae94cce8f3c2c9b9a
+int OR(int n1, int n2){
+
+    float v1 = float(n1);
+    float v2 = float(n2);
+    
+    int byteVal = 1;
+    int result = 0;
+    
+    for(int i = 0; i < 32; i++){
+        bool keepGoing = v1>0.0 || v2 > 0.0;
+        if(keepGoing){
+            
+            bool addOn = mod(v1, 2.0) > 0.0 || mod(v2, 2.0) > 0.0;
+            
+            if(addOn){
+                result += byteVal;
+            }
+            
+            v1 = floor(v1 / 2.0);
+            v2 = floor(v2 / 2.0);
+            
+            byteVal *= 2;
+        } else {
+            return result;
+        }
+    }
+    return result;  
+}
+
+int AND(int n1, int n2){
+    
+    float v1 = float(n1);
+    float v2 = float(n2);
+    
+    int byteVal = 1;
+    int result = 0;
+    
+    for(int i = 0; i < 32; i++){
+        bool keepGoing = v1>0.0 || v2 > 0.0;
+        if(keepGoing){
+            
+            bool addOn = mod(v1, 2.0) > 0.0 && mod(v2, 2.0) > 0.0;
+            
+            if(addOn){
+                result += byteVal;
+            }
+            
+            v1 = floor(v1 / 2.0);
+            v2 = floor(v2 / 2.0);
+            byteVal *= 2;
+        } else {
+            return result;
+        }
+    }
+    return result;
+}
+
+int NAND(int n1, int n2){
+    
+    float v1 = float(n1);
+    float v2 = float(n2);
+    
+    int byteVal = 1;
+    int result = 0;
+    
+    for(int i = 0; i < 32; i++){
+        bool keepGoing = v1>0.0 || v2 > 0.0;
+        if(keepGoing){
+            
+            bool addOn = mod(v1, 2.0) != mod(v2, 2.0);
+            
+            if(addOn){
+                result += byteVal;
+            }
+            
+            v1 = floor(v1 / 2.0);
+            v2 = floor(v2 / 2.0);
+            byteVal *= 2;
+        } else {
+            return result;
+        }
+    }
+    return result;
+}
+
+int XOR(int n1, int n2){
+    return AND(NAND(n1, n2), OR(n1, n2));
+}
+
+int RShift(int num, float shifts){
+    return int(floor(float(num) / pow(2.0, shifts)));
+}
+
+// hexagon stuff from here - https://www.redblobgames.com/grids/hexagons/#hex-to-pixel
 vec2 cube_to_axial(vec3 cube){
     float q = cube.x;
     float r = cube.z;
@@ -227,36 +322,41 @@ float twinGeo(float v, float range){
     return 1.;
 }
 
+int intS(float v){
+    return int(v* pow(2., 30.));
+}
+
+vec3 v3XOR(vec3 col, vec3 t1){
+    return vec3(XOR(intS(col.x), intS(t1.x)), XOR(intS(col.y), intS(t1.y)), XOR(intS(col.z), intS(t1.z))) / pow(2., 30.);
+}
+
 void main () {
     vec2 stN = uvN();
      vec2 camPos = vec2(stN.x, stN.y);
 
     vec4 mN = mouse / resolution.xyxy /2.;
     
-    bool useDefaults = mN.z < 0.5;
+    bool useVarying = false; mN.z < 0.5;
 
-    float decay = useDefaults ? 0.795 + clamp(indMap(mN.x, 0.)*1.1, 0., 1.)*0.2 : 0.98;
-    float blockColor = useDefaults ? block(20.+ indMap(mN.x, 1.) * 70., 2.+ indMap(mN.y, 0.) *15.) + 0.01 : block(50.+ sinN(time/2.) * 40., 7.+sinN(time/1.5)*10.) + 0.01;
-    float lumBlend = useDefaults ? pow(2., scale(indMap(mN.y, 1.), -2., 4.)) : 0.25;
-    float numHex = useDefaults ? 30. + indMap(mN.x, 2.) * 90. : 90.;
-    float shadowSpeed = useDefaults ? twinGeo(indMap(mN.y, 2.), 5.): 1./5.;
+    float decay = useVarying ? 0.795 + clamp(indMap(mN.x, 0.)*1.1, 0., 1.)*0.2 : 0.98;
+    float blockColor = useVarying ? block(20.+ indMap(mN.x, 1.) * 70., 2.+ indMap(mN.y, 0.) *15.) + 0.01 : block(50.+ sinN(time/2.) * 40., 7.+sinN(time/1.5)*10.) + 0.01;
+    float lumBlend = useVarying ? pow(2., scale(indMap(mN.y, 1.), -2., 4.)) : 0.25;
+    float numHex = useVarying ? 30. + indMap(mN.x, 2.) * 90. : 90.;
+    float shadowSpeed = useVarying ? twinGeo(indMap(mN.y, 2.), 5.): 1./5.;
     float backZoom = 1.;
     float shadowZoom = 1.;
     
-    vec2 cent = useDefaults ? vec2(sinN(time * sin(time/2000.)) / 2. + 0.2, cosN(sin((1. + (1.-mN.y) * 5.) * time/2000.)) / 2.) : vec2(0.5);
-    vec2 z = useDefaults ? vec2(stN.x * mN.x + (1. - mN.x)*cent.x, stN.y * mN.y + (1. - mN.y)*cent.y) : stN;
+    vec2 cent = useVarying ? vec2(sinN(time * sin(time/2000.)) / 2. + 0.2, cosN(sin((1. + (1.-mN.y) * 5.) * time/2000.)) / 2.) : vec2(0.5);
+    vec2 z = useVarying ? vec2(stN.x * mN.x + (1. - mN.x)*cent.x, stN.y * mN.y + (1. - mN.y)*cent.y) : stN;
     
-    vec2 centCam = useDefaults ? vec2((1. - sinN(time * sin(time/2000.))) / 2. + 0.2, cosN(time * sin(time/2000.)) / 2.) : vec2(0.5);
-    vec2 mouseMap = vec2(scale(indMap(mN.x, 3.), 0.5, 1.), scale(indMap(mN.y, 3.), 0.5, 1.));
-    vec2 zcam = useDefaults ? vec2(stN.x * mouseMap.x + (1. -  mouseMap.x)*(cent.x), stN.y *  mouseMap.y + (1. -  mouseMap.y)*cent.y) : camPos;
-    
-   
+    vec2 centCam = useVarying ? vec2((1. - sinN(time * sin(time/2000.))) / 2. + 0.2, cosN(time * sin(time/2000.)) / 2.) : vec2(0.5);
+    vec2 mouseMap = useVarying ? vec2(scale(indMap(mN.x, 3.), 0.5, 1.3), scale(indMap(mN.y, 3.), 0.5, 1.3)) : mN.xy; //TODO - allow this > 1?
+    vec2 zcam = useVarying ? vec2(stN.x * mouseMap.x + (1. -  mouseMap.x)*(centCam.x), stN.y *  mouseMap.y + (1. -  mouseMap.y)*centCam.y) : camPos;
     
     vec3 snap = texture2D(channel3, zcam).rgb;  
     vec3 cam = texture2D(channel0, zcam).rgb;  
     vec3 bb = texture2D(backbuffer, vec2(stN.x, stN.y)).rgb;
     vec3 t1 = texture2D(channel1, stN).rgb;
-    
     
     vec3 c;
     float lastFeedback = texture2D(backbuffer, vec2(stN.x, stN.y)).a; 
@@ -265,6 +365,13 @@ void main () {
     vec3 col = diffColor(time * shadowSpeed, stN);
     float hexDiff = hexDiffAvg(zcam, numHex);
     float pointDiff = colourDistance(cam, snap);
+    
+    // CHeck Swaps of layers 
+    int t = int(5.);
+    vec3 col_ = mix(col, t1, mN.x);
+    vec3 t1_ = mix(t1, col, mN.y);
+    t1 = vec3(stN.x < 0.5);
+    col = v3XOR(col, t1);
     
     if(hexDiff > 0.8){
         if(lastFeedback < 1.) {
