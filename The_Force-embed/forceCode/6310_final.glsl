@@ -1,3 +1,4 @@
+
 // hexagon stuff from here - https://www.redblobgames.com/grids/hexagons/#hex-to-pixel
 vec2 cube_to_axial(vec3 cube){
     float q = cube.x;
@@ -244,8 +245,9 @@ void main () {
      vec2 camPos = vec2(stN.x, stN.y);
 
     vec4 mN = mouse / resolution.xyxy /2.;
-    
     bool useVarying = mN.z < 0.5;
+    
+    mN = vec4((bands.x+bands.y)/2., (bands.z+bands.w)/2., 0., 0.);
 
     float decay = useVarying ? 0.795 + clamp(indMap(mN.x, 0.)*1.1, 0., 1.)*0.2 : 0.98;
     float blockColor = useVarying ? block(20.+ indMap(mN.x, 1.) * 70., 2.+ indMap(mN.y, 0.) *15.) + 0.01 : block(50.+ sinN(time/2.) * 40., 7.+sinN(time/1.5)*10.) + 0.01;

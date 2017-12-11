@@ -256,33 +256,7 @@ $( document ).ready(function()
         .click( function(event)
         {
             event.preventDefault();
-            navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-
-            if (window.location.protocol != "https:") 
-                alert("Browser may not support microphone on non-secure connection. Please copy your code before changing protocol in the URL from http to https.");
-
-            if (navigator.getUserMedia) 
-            {
-                initAudio();
-                navigator.getUserMedia(
-                    {audio: true}, 
-                    function(stream)  //success
-                    {
-                        mSound.mStream = stream;
-                        mSound.mSource = mAudioContext.createMediaStreamSource(stream);
-                        mSound.mSource.disconnect();
-                        mSound.mSource.connect(mSound.mAnalyser);
-                    }, 
-                    function() //failure
-                    {
-                        alert("Error getting user media stream.");
-                    });
-
-                $("#micTogglePlaythrough").button("enable");
-                bandsOn = true;
-            }
-            else
-                alert("Browser doesn't support microphone or audio line in.");
+            
 
             $(this).blur();
         });
@@ -963,6 +937,34 @@ $( document ).ready(function()
         mAudioContext = new contextAvailable();
     else
         alert("This browser doesn't support Audio Contexts. Audio input will not be available.");
+
+    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+    if (window.location.protocol != "https:") 
+        alert("Browser may not support microphone on non-secure connection. Please copy your code before changing protocol in the URL from http to https.");
+
+    if (navigator.getUserMedia) 
+    {
+        initAudio();
+        navigator.getUserMedia(
+            {audio: true}, 
+            function(stream)  //success
+            {
+                mSound.mStream = stream;
+                mSound.mSource = mAudioContext.createMediaStreamSource(stream);
+                mSound.mSource.disconnect();
+                mSound.mSource.connect(mSound.mAnalyser);
+            }, 
+            function() //failure
+            {
+                alert("Error getting user media stream.");
+            });
+
+        $("#micTogglePlaythrough").button("enable");
+        bandsOn = true;
+    }
+    else
+        alert("Browser doesn't support microphone or audio line in.");
 
     // --- ace editor ---------------------
     var langTools = ace.require("ace/ext/language_tools");
