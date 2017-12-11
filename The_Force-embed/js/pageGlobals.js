@@ -940,8 +940,8 @@ $( document ).ready(function()
 
     navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
-    if (window.location.protocol != "https:") 
-        alert("Browser may not support microphone on non-secure connection. Please copy your code before changing protocol in the URL from http to https.");
+    // if (window.location.protocol != "https:") 
+    //     alert("Browser may not support microphone on non-secure connection. Please copy your code before changing protocol in the URL from http to https.");
 
     if (navigator.getUserMedia) 
     {
