@@ -172,9 +172,44 @@ function createTarget(width, height) {
 }
 
 function setShaderFromEditor(shaderCode) {
-    var result = newShader(vsDraw, shaderCode ? shaderCode : editor.getValue());
+    var editorCode = shaderCode ? shaderCode : editor.getValue();
+    var postSequenceResult = stripAndProcessSequencing(editorCode)
+    var result = newShader(vsDraw, postSequenceResult.shaderCode);
+    result.sequenceErrors = postSequenceResult.errors;
     sendOSCMessages();
     return setShader(result, false);
+}
+
+function stripAndProcessSequencing(code){
+  var codeLines = code.split("\n");
+  var i = 0; 
+  var sequenceErrors = {};
+  while(i < codeLines.length){
+    var line  = codeLines[i];
+    if(line.indexOf("pattern") > -1){
+        codeLines.splice(i, 1);
+        var seqError = parseAndTriggerSequence(line);
+        if(seqError){
+          sequenceErrors[i] = seqError;
+        }
+    } else {
+        i++
+    }
+  }
+  return {shaderCode: codeLines.join("\n"), errors: sequenceErrors};
+}
+
+Tone.Transport.start()
+var seq = 0;
+function parseAndTriggerSequence(patternString){
+    console.log("pattern", patternString);
+    var patternCode = patternString.substring("pattern(".length, patternString.length-1);
+    if(seq){
+      seq.dispose();
+    } else {
+
+    }
+
 }
 
 function newShader(vs, shaderCode) {

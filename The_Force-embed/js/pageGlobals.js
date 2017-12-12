@@ -1225,6 +1225,17 @@ function setShader(result, fromScript)
             editor.session.setAnnotations(tAnnotations);
         }
     }
+    var sequenceErrorLines = Object.keys(result.sequenceErrors);
+    if(sequenceErrorLines.length != 0){
+        var sAnnotations = [];
+        for(var i = 0; i < sequenceErrorLines.length; i++){
+            var annotation = {};
+            annotation.row = sequenceErrorLines[i];
+            annotation.text = result.sequenceErrors[sequenceErrorLines[i]];
+            annotation.type = "error";
+        }
+        if(debugging) editor.session.setAnnotations(sAnnotations);
+    }
 }
 
 var SoundCloudAudioSource = function(player) {
