@@ -1,8 +1,13 @@
 (
-var midiOut, chords, markov, normalize, markovStep, tempoClock, state, playChord, chordStep, markovNorm;
+var midiOut, chords, markov, normalize, markovStep, tempoClock, state, playChord, chordStep, markovNorm, altChords, chordTask, bassLineTask, counterTask, lineFunction, maxPort, pythonPort, lineInd;
 
+MIDIClient.init;
+MIDIIn.connectAll;
 
 midiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
+maxPort = NetAddr("127.0.0.1", 1234);
+pythonPort = NetAddr("127.0.0.1", 6002);
+tempoClock = TempoClock.new(1, 0);
 
 chords = List.new;
 
@@ -12,9 +17,13 @@ chords.add([55, 59, 62, 65]);
 chords.add([53, 57, 60, 65]);
 chords.add([54, 57, 60, 62]);
 
+chords = List.new;
+
 c = chords;
 
 state = 0;
+
+lineInd = 0;
 
 markov = [
     [9, 8, 7, 6, 5],
@@ -68,19 +77,27 @@ chordStep = {
     waitTime;
 };
 
-    //TODO: move variable instations to near the functions that use them
-OSCFunc({|msg, time, addr, recvPort|
-    //msg[1] is the new BEAT DURATION (not tempo)
-    tempoClock = TempoClock.new(1/msg[1], 0);
-    //t = tempoClock;
-    tempoClock.sched(0,chordStep);
-    "MULTILOOP ONE SHOT".postln;
+counterTask = Task({
+    var ind = 0;
 
-}, "/masterClockBeat").oneShot;
+    {
+        if(ind == 0, {
+            pythonPort.sendMsg("/getLine", lineInd);
+            lineInd = lineInd + 1;
+        });
+        (4/100).wait;
+        maxPort.sendMsg("/counterStep", ind);
+        ind = (ind + 1) % 100;
 
+
+    }.loop
+
+}, tempoClock);
+counterTask.play;
 
 
 )
+
 
 
 
