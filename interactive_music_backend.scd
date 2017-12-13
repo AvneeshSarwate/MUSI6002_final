@@ -1,11 +1,11 @@
 (
-var midiOutVox, chords, markov, normalize, markovStep, tempoClock, state, playChord, chordStep, markovNorm, altChords, chordTask, bassLineTask, counterTask, lineFunction, maxPort, pythonPort, lineInd, onsetBuffer;
+var midiOutVox, chords, markov, normalize, markovStep, tempoClock, state, playChord, chordStep, markovNorm, altChords, chordTask, bassLineTask, counterTask, lineFunction, maxPort, pythonPort, lineInd, onsetBuffer, generateAndStartBassLine, activeChord, playNote, midiOutBass;
 
 MIDIClient.init;
 MIDIIn.connectAll;
 
 midiOutVox = MIDIOut.newByName("IAC Driver", "Bus 2");
-midiOutBass = MIDIOut.newByName("IAC Driver", "Bus 2");
+midiOutBass = MIDIOut.newByName("IAC Driver", "Bus 3");
 maxPort = NetAddr("127.0.0.1", 1234);
 pythonPort = NetAddr("127.0.0.1", 6002);
 tempoClock = TempoClock.new(1, 0);
@@ -17,6 +17,8 @@ chords.add([57, 62, 65, 69]);
 chords.add([55, 59, 62, 65]);
 chords.add([53, 57, 60, 65]);
 chords.add([54, 57, 60, 62]);
+
+activeChord = chords[0];
 
 chords = List.new;
 
@@ -80,6 +82,7 @@ chordStep = {
 
 onsetBuffer = List.new;
 OSCFunc({|msg, time, addr, recvPort|
+    ["onset", tempoClock.beats].postln;
     onsetBuffer.add(tempoClock.beats);
 }, "/onset");
 
@@ -87,10 +90,10 @@ playNote = {|note, dur|
     Task({
         midiOutBass.noteOn(1, note);
         dur.wait - 0.05;
-        midiOutBass.noteOff(note);
+        midiOutBass.noteOff(1, note);
     }).play;
     dur;
-}
+};
 
 
 
@@ -103,7 +106,9 @@ playNote = {|note, dur|
 generateAndStartBassLine = {
     var startBeat = onsetBuffer[0].floor;
     var hitBuffer = onsetBuffer - startBeat;
-    var endBeat = onsetBuffer.wrapAt(-1).ceil;
+    var endBeat = hitBuffer.wrapAt(-1).ceil;
+    var duplicateRemovedHits;
+    var durations;
 
     (0..(hitBuffer.size-1)).do({|i|
         var hit = hitBuffer[i];
@@ -113,21 +118,23 @@ generateAndStartBassLine = {
         hitBuffer[i] = if((lastHit-hit).abs < (nextHit-hit).abs, lastHit, nextHit);
     });
 
-    var duplicateRemovedHits = List.newFrom(Set.newFrom(hitBuffer)).sort;
+    duplicateRemovedHits = List.newFrom(Set.newFrom(hitBuffer)).sort;
     duplicateRemovedHits.add(endBeat);
-    var durations = List.new
-    (0..(duplicateRemovedHits.length-2)).do({|i|
+    durations = List.new;
+    (0..(duplicateRemovedHits.size-2)).do({|i|
         durations.add(duplicateRemovedHits[i+1] - duplicateRemovedHits[i]);
     });
 
+    "Playing bassline".postln;
+
     Task({
         durations.do({|dur|
-            var note = activeChord.choose - 12;
-            playNote(note, dur).wait;
+            var note = activeChord.choose - 24;
+            playNote.(note, dur).wait;
         })
-    }).play;
+    }, tempoClock).play;
 
-    onsetBuffer = List.new;
+    onsetBuffer.clear;
 };
 
 
@@ -144,7 +151,7 @@ counterTask = Task({
     {
         if(ind == 0, {
             pythonPort.sendMsg("/getLine", lineInd);
-            generateAndStartBassLine.();
+            if(onsetBuffer.size > 0, {generateAndStartBassLine.()});
             lineInd = lineInd + 1;
         });
         (~secondsPerLine/100).wait;
@@ -174,8 +181,9 @@ counterTask.play;
 a = List.newFrom(Set.newFrom([1, 2, 3, 3])).sort;
 
 
-a.postln
+a.clear;
 
+a.postln;
 
 )
 
