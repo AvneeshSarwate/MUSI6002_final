@@ -1,10 +1,11 @@
 (
-var midiOut, chords, markov, normalize, markovStep, tempoClock, state, playChord, chordStep, markovNorm, altChords, chordTask, bassLineTask, counterTask, lineFunction, maxPort, pythonPort, lineInd;
+var midiOutVox, chords, markov, normalize, markovStep, tempoClock, state, playChord, chordStep, markovNorm, altChords, chordTask, bassLineTask, counterTask, lineFunction, maxPort, pythonPort, lineInd, onsetBuffer;
 
 MIDIClient.init;
 MIDIIn.connectAll;
 
-midiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
+midiOutVox = MIDIOut.newByName("IAC Driver", "Bus 2");
+midiOutBass = MIDIOut.newByName("IAC Driver", "Bus 2");
 maxPort = NetAddr("127.0.0.1", 1234);
 pythonPort = NetAddr("127.0.0.1", 6002);
 tempoClock = TempoClock.new(1, 0);
@@ -23,7 +24,6 @@ c = chords;
 
 state = 0;
 
-lineInd = 0;
 
 markov = [
     [9, 8, 7, 6, 5],
@@ -61,9 +61,9 @@ playChord = {|chord|
     ["CHORD PLAY", chord].postln;
     chord.do({|note|
         Task({
-            midiOut.noteOn(1, note);
+            midiOutVox.noteOn(1, note);
             (waitTime-0.05).wait;
-            midiOut.noteOff(1, note);
+            midiOutVox.noteOff(1, note);
         }, tempoClock).play;
     });
     waitTime
@@ -77,15 +77,77 @@ chordStep = {
     waitTime;
 };
 
+
+onsetBuffer = List.new;
+OSCFunc({|msg, time, addr, recvPort|
+    onsetBuffer.add(tempoClock.beats);
+}, "/onset");
+
+playNote = {|note, dur|
+    Task({
+        midiOutBass.noteOn(1, note);
+        dur.wait - 0.05;
+        midiOutBass.noteOff(note);
+    }).play;
+    dur;
+}
+
+
+
+
+
+
+
+
+
+generateAndStartBassLine = {
+    var startBeat = onsetBuffer[0].floor;
+    var hitBuffer = onsetBuffer - startBeat;
+    var endBeat = onsetBuffer.wrapAt(-1).ceil;
+
+    (0..(hitBuffer.size-1)).do({|i|
+        var hit = hitBuffer[i];
+        var timeToNextHit = ~quantizeValue - (hit % ~quantizeValue);
+        var nextHit = hit + timeToNextHit;
+        var lastHit = nextHit - ~quantizeValue;
+        hitBuffer[i] = if((lastHit-hit).abs < (nextHit-hit).abs, lastHit, nextHit);
+    });
+
+    var duplicateRemovedHits = List.newFrom(Set.newFrom(hitBuffer)).sort;
+    duplicateRemovedHits.add(endBeat);
+    var durations = List.new
+    (0..(duplicateRemovedHits.length-2)).do({|i|
+        durations.add(duplicateRemovedHits[i+1] - duplicateRemovedHits[i]);
+    });
+
+    Task({
+        durations.do({|dur|
+            var note = activeChord.choose - 12;
+            playNote(note, dur).wait;
+        })
+    }).play;
+
+    onsetBuffer = List.new;
+};
+
+
+
+
+~secondsPerLine = 3;
+lineInd = 0;
+~quantizeValue = 1/4;
+
 counterTask = Task({
     var ind = 0;
+    var quantizeVal = 1/4;
 
     {
         if(ind == 0, {
             pythonPort.sendMsg("/getLine", lineInd);
+            generateAndStartBassLine.();
             lineInd = lineInd + 1;
         });
-        (4/100).wait;
+        (~secondsPerLine/100).wait;
         maxPort.sendMsg("/counterStep", ind);
         ind = (ind + 1) % 100;
 
@@ -95,15 +157,27 @@ counterTask = Task({
 }, tempoClock);
 counterTask.play;
 
-
 )
 
 
-
-
-
 //================================================================================================
 //================================================================================================
+
+
+
+
+
+
+(
+
+
+a = List.newFrom(Set.newFrom([1, 2, 3, 3])).sort;
+
+
+a.postln
+
+
+)
 
 (
 
