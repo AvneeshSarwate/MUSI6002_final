@@ -123,7 +123,7 @@ Please use the NLTK Downloader to obtain the resource:
 #     print('{0}: {1}, '.format(k, ss[k]))
 
 try: 
-    maxServer = OSC.OSCServer(('127.0.0.1', 6002))
+    maxServer = OSC.OSCServer(('127.0.0.1', 6003))
     maxServerThread = threading.Thread(target=maxServer.serve_forever)
     maxServerThread.daemon = False
     maxServerThread.start()
@@ -131,11 +131,17 @@ try:
     maxClient = OSC.OSCClient()
     maxClient.connect(('127.0.0.1', 1234))
 
-    def sendOSCMessage( addr, *msgArgs):
+    scClient = OSC.OSCClient()
+    scClient.connect(('127.0.0.1', 57120))
+
+    def sendOSCMessage( addr, target, *msgArgs):
         msg = OSC.OSCMessage()
         msg.setAddress(addr)
         msg.append(*msgArgs)
-        maxClient.send(msg)
+        if target == 'max':
+            maxClient.send(msg)
+        if target == 'sc'
+            scClient.send(msg)
 
 
     sentimentAnalyzer = SentimentIntensityAnalyzer()
@@ -151,8 +157,10 @@ try:
 
     def getLine(addr, tags, stuff, source):
         line = pdCleanedLines[stuff[0]]
-        print 'sending new line', line, sentimentAnalyzer.polarity_scores(line)['compound']
-        sendOSCMessage("/nextLine", [line])
+        valence = sentimentAnalyzer.polarity_scores(line)['compound']
+        print 'sending new line', line, valence
+        sendOSCMessage("/nextLine", 'max', [line])
+        sendOSCMessage("/valence", 'sc', [valence])
 
     maxServer.addMsgHandler("/getLine", getLine)
 

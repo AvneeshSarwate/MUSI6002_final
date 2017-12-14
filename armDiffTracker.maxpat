@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 113.0, 191.0, 909.0, 790.0 ],
+		"rect" : [ 260.0, 175.0, 909.0, 790.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -210,7 +210,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 228.0, 178.0, 99.0, 22.0 ],
 									"style" : "",
-									"text" : "scale 0. 60. 0. 1."
+									"text" : "scale 0. 60. 1. 0."
 								}
 
 							}
@@ -499,7 +499,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 228.0, 178.0, 99.0, 22.0 ],
 									"style" : "",
-									"text" : "scale 0. 60. 0. 1."
+									"text" : "scale 0. 60. 1. 0."
 								}
 
 							}
@@ -788,7 +788,7 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 228.0, 178.0, 99.0, 22.0 ],
 									"style" : "",
-									"text" : "scale 0. 60. 0. 1."
+									"text" : "scale 0. 60. 1. 0."
 								}
 
 							}
@@ -1264,7 +1264,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 606.0, 833.0, 140.0, 22.0 ],
 					"style" : "",
-					"text" : "udpsend 127.0.0.1 6002"
+					"text" : "udpsend 127.0.0.1 6005"
 				}
 
 			}
@@ -2267,8 +2267,8 @@
 , 							{
 								"name" : "newobjYellow-1",
 								"default" : 								{
-									"accentcolor" : [ 0.82517, 0.78181, 0.059545, 1.0 ],
-									"fontsize" : [ 12.059008 ]
+									"fontsize" : [ 12.059008 ],
+									"accentcolor" : [ 0.82517, 0.78181, 0.059545, 1.0 ]
 								}
 ,
 								"parentstyle" : "",
@@ -2689,10 +2689,6 @@
 				"implicit" : 1
 			}
 , 			{
-				"name" : "jit.>.mxo",
-				"type" : "iLaX"
-			}
-, 			{
 				"name" : "OpenSoundControl.mxo",
 				"type" : "iLaX"
 			}
@@ -2773,8 +2769,8 @@
 , 			{
 				"name" : "newobjYellow-1",
 				"default" : 				{
-					"accentcolor" : [ 0.82517, 0.78181, 0.059545, 1.0 ],
-					"fontsize" : [ 12.059008 ]
+					"fontsize" : [ 12.059008 ],
+					"accentcolor" : [ 0.82517, 0.78181, 0.059545, 1.0 ]
 				}
 ,
 				"parentstyle" : "",

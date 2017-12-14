@@ -33,7 +33,9 @@ function bang(){
 function calculateCenterOfMass() {
 	var weightedSums = [0, 0, 0, 0] //left xy, right xy
 	var sums = [0, 0, 0, 0];
-	
+	var numPixChangeRight = 0;
+	var numPixChangeLeft = 0;
+
 	for(var i = 0; i < xDim; i++) {
 		for(var j = 0; j < yDim; j++) {
 			var camColor = camMatrix.getcell(i, j);
@@ -47,19 +49,22 @@ function calculateCenterOfMass() {
 					weightedSums[0] += colDist * i;
 					sums[1] += colDist;
 					weightedSums[1] += colDist * j;
+					numPixChangeLeft += 1;
 				} else {
 					sums[2] += colDist;
 					weightedSums[2] += colDist * (xDim - i);
 					sums[3] += colDist;		
 					weightedSums[3] += colDist * j;
+					numPixChangeRight += 1;
 				}
 			}
 		}
 	}
-	
+	var sigChangeLeft = numPixChangeLeft > 0.1 * xDim * yDim / 2;
+	var sigChangeRight = numPixChangeRight > 0.1 * xDim * yDim / 2;
 	var w = weightedSums;
 	var s = sums;
-	return [w[0]/s[0], w[1]/s[1], w[2]/s[2], w[3]/s[3]]; 
+	return [sigChangeLeft ? w[0]/s[0] : 0 , sigChangeLeft ? w[1]/s[1]: 0, sigChangeRight ? w[2]/s[2] : 0, sigChangeRight ? w[3]/s[3] : 0]; 
 }
 
 function grabBackground() {
